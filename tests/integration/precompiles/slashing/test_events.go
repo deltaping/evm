@@ -33,7 +33,7 @@ func (s *PrecompileTestSuite) TestUnjailEvent() {
 		{
 			"success - the correct event is emitted",
 			func() []interface{} {
-				validator, err := s.network.App.GetStakingKeeper().GetValidator(ctx, sdk.ValAddress(s.keyring.GetAccAddr(0)))
+				validator, err := s.network.App.GetStakingKeeperSDK().GetValidator(ctx, sdk.ValAddress(s.keyring.GetAccAddr(0)))
 				s.Require().NoError(err)
 
 				consAddr, err := validator.GetConsAddr()

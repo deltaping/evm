@@ -216,10 +216,10 @@ func (s *PrecompileTestSuite) TestRun() {
 					time.Now().Add(time.Hour),
 					math.NewInt(1000),
 					0,
-					s.network.App.GetStakingKeeper().ValidatorAddressCodec(),
+					s.network.App.GetStakingKeeperSDK().ValidatorAddressCodec(),
 					s.network.App.GetAccountKeeper().AddressCodec(),
 				)
-				err = s.network.App.GetStakingKeeper().SetUnbondingDelegation(ctx, ubd)
+				err = s.network.App.GetStakingKeeperSDK().SetUnbondingDelegation(ctx, ubd)
 				s.Require().NoError(err, "failed to set unbonding delegation")
 
 				// Needs to be called after setting unbonding delegation
@@ -294,11 +294,11 @@ func (s *PrecompileTestSuite) TestRun() {
 					math.NewInt(1000),
 					math.LegacyNewDec(1),
 					0,
-					s.network.App.GetStakingKeeper().ValidatorAddressCodec(),
+					s.network.App.GetStakingKeeperSDK().ValidatorAddressCodec(),
 					s.network.App.GetAccountKeeper().AddressCodec(),
 				)
 
-				err = s.network.App.GetStakingKeeper().SetRedelegation(ctx, redelegation)
+				err = s.network.App.GetStakingKeeperSDK().SetRedelegation(ctx, redelegation)
 				s.Require().NoError(err, "failed to set redelegation")
 
 				input, err := s.precompile.Pack(
@@ -344,10 +344,10 @@ func (s *PrecompileTestSuite) TestRun() {
 					time.Now().Add(time.Hour),
 					math.NewInt(1000),
 					0,
-					s.network.App.GetStakingKeeper().ValidatorAddressCodec(),
+					s.network.App.GetStakingKeeperSDK().ValidatorAddressCodec(),
 					s.network.App.GetAccountKeeper().AddressCodec(),
 				)
-				err = s.network.App.GetStakingKeeper().SetUnbondingDelegation(ctx, ubd)
+				err = s.network.App.GetStakingKeeperSDK().SetUnbondingDelegation(ctx, ubd)
 				s.Require().NoError(err, "failed to set unbonding delegation")
 
 				// Needs to be called after setting unbonding delegation
@@ -564,10 +564,10 @@ func (s *PrecompileTestSuite) TestCMS() {
 					time.Now().Add(time.Hour),
 					math.NewInt(1000),
 					0,
-					s.network.App.GetStakingKeeper().ValidatorAddressCodec(),
+					s.network.App.GetStakingKeeperSDK().ValidatorAddressCodec(),
 					s.network.App.GetAccountKeeper().AddressCodec(),
 				)
-				err = s.network.App.GetStakingKeeper().SetUnbondingDelegation(ctx, ubd)
+				err = s.network.App.GetStakingKeeperSDK().SetUnbondingDelegation(ctx, ubd)
 				s.Require().NoError(err, "failed to set unbonding delegation")
 
 				// Needs to be called after setting unbonding delegation
@@ -642,11 +642,11 @@ func (s *PrecompileTestSuite) TestCMS() {
 					math.NewInt(1000),
 					math.LegacyNewDec(1),
 					0,
-					s.network.App.GetStakingKeeper().ValidatorAddressCodec(),
+					s.network.App.GetStakingKeeperSDK().ValidatorAddressCodec(),
 					s.network.App.GetAccountKeeper().AddressCodec(),
 				)
 
-				err = s.network.App.GetStakingKeeper().SetRedelegation(ctx, redelegation)
+				err = s.network.App.GetStakingKeeperSDK().SetRedelegation(ctx, redelegation)
 				s.Require().NoError(err, "failed to set redelegation")
 
 				input, err := s.precompile.Pack(
@@ -692,10 +692,10 @@ func (s *PrecompileTestSuite) TestCMS() {
 					time.Now().Add(time.Hour),
 					math.NewInt(1000),
 					0,
-					s.network.App.GetStakingKeeper().ValidatorAddressCodec(),
+					s.network.App.GetStakingKeeperSDK().ValidatorAddressCodec(),
 					s.network.App.GetAccountKeeper().AddressCodec(),
 				)
-				err = s.network.App.GetStakingKeeper().SetUnbondingDelegation(ctx, ubd)
+				err = s.network.App.GetStakingKeeperSDK().SetUnbondingDelegation(ctx, ubd)
 				s.Require().NoError(err, "failed to set unbonding delegation")
 
 				// Needs to be called after setting unbonding delegation

@@ -957,8 +957,8 @@ func (app *EVMD) GetBaseApp() *baseapp.BaseApp {
 }
 
 // GetStakingKeeperSDK implements the TestingApp interface.
-func (app *EVMD) GetStakingKeeperSDK() stakingkeeper.Keeper {
-	return *app.StakingKeeper
+func (app *EVMD) GetStakingKeeperSDK() *stakingkeeper.Keeper {
+	return app.StakingKeeper
 }
 
 // GetIBCKeeper implements the TestingApp interface.

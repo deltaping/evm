@@ -75,7 +75,7 @@ func (is *IntegrationTestSuite) SetupTest() {
 	txFactory := factory.New(integrationNetwork, grpcHandler)
 
 	ctx := integrationNetwork.GetContext()
-	sk := integrationNetwork.App.GetStakingKeeper()
+	sk := integrationNetwork.App.GetStakingKeeperSDK()
 	bondDenom, err := sk.BondDenom(ctx)
 	Expect(err).ToNot(HaveOccurred())
 	Expect(bondDenom).ToNot(BeEmpty(), "bond denom cannot be empty")

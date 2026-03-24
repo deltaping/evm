@@ -623,7 +623,7 @@ func PrepareAccountsForDelegationRewards(t *testing.T, ctx sdk.Context, app evm.
 	accountKeeper := app.GetAccountKeeper()
 	bankKeeper := app.GetBankKeeper()
 	distrKeeper := app.GetDistrKeeper()
-	stakingKeeper := app.GetStakingKeeper()
+	stakingKeeper := app.GetStakingKeeperSDK()
 	if totalNeededBalance.IsZero() {
 		accountKeeper.SetAccount(ctx, accountKeeper.NewAccountWithAddress(ctx, addr))
 	} else {

@@ -100,7 +100,7 @@ func (s *PrecompileTestSuite) TestValidatorDistributionInfo() {
 				s.Require().NoError(err)
 
 				// make a self delegation
-				_, err = s.network.App.GetStakingKeeper().Delegate(ctx, valAddr.Bytes(), amt, stakingtypes.Unspecified, s.network.GetValidators()[0], true)
+				_, err = s.network.App.GetStakingKeeperSDK().Delegate(ctx, valAddr.Bytes(), amt, stakingtypes.Unspecified, s.network.GetValidators()[0], true)
 				s.Require().NoError(err)
 				return []interface{}{
 					s.network.GetValidators()[0].OperatorAddress,

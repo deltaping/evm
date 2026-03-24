@@ -131,7 +131,7 @@ func (s *PrecompileTestSuite) TestRun() {
 		{
 			"pass - hex to bech32 validator operator (cosmosvaloper)",
 			func() *vm.Contract {
-				valAddrCodec := s.network.App.GetStakingKeeper().ValidatorAddressCodec()
+				valAddrCodec := s.network.App.GetStakingKeeperSDK().ValidatorAddressCodec()
 				valAddrBz, err := valAddrCodec.StringToBytes(s.network.GetValidators()[0].GetOperator())
 				s.Require().NoError(err, "failed to convert string to bytes")
 				input, err := s.precompile.Pack(
@@ -211,7 +211,7 @@ func (s *PrecompileTestSuite) TestRun() {
 				return contract
 			},
 			func(data []byte) {
-				valAddrCodec := s.network.App.GetStakingKeeper().ValidatorAddressCodec()
+				valAddrCodec := s.network.App.GetStakingKeeperSDK().ValidatorAddressCodec()
 				valAddrBz, err := valAddrCodec.StringToBytes(s.network.GetValidators()[0].GetOperator())
 				s.Require().NoError(err, "failed to convert string to bytes")
 

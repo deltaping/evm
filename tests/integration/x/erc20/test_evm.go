@@ -119,7 +119,7 @@ func (s *KeeperTestSuite) TestBalanceOf() {
 			s.network.App.GetKey("erc20"), s.network.App.AppCodec(),
 			authtypes.NewModuleAddress(govtypes.ModuleName),
 			s.network.App.GetAccountKeeper(), s.network.App.GetBankKeeper(),
-			mockEVMKeeper, s.network.App.GetStakingKeeper(),
+			mockEVMKeeper, s.network.App.GetStakingKeeperSDK(),
 			&transferKeeper,
 		)
 		s.network.App.SetErc20Keeper(erc20Keeper)
@@ -220,7 +220,7 @@ func (s *KeeperTestSuite) TestQueryERC20ForceFail() {
 			s.network.App.GetKey("erc20"), s.network.App.AppCodec(),
 			authtypes.NewModuleAddress(govtypes.ModuleName),
 			s.network.App.GetAccountKeeper(), s.network.App.GetBankKeeper(),
-			mockEVMKeeper, s.network.App.GetStakingKeeper(),
+			mockEVMKeeper, s.network.App.GetStakingKeeperSDK(),
 			&transferKeeper,
 		)
 		s.network.App.SetErc20Keeper(erc20Keeper)
@@ -400,7 +400,7 @@ func (s *KeeperTestSuite) TestQueryERC20Bytes32Fallback() {
 				s.network.App.GetKey("erc20"), s.network.App.AppCodec(),
 				authtypes.NewModuleAddress(govtypes.ModuleName),
 				s.network.App.GetAccountKeeper(), s.network.App.GetBankKeeper(),
-				mockEVMKeeper, s.network.App.GetStakingKeeper(),
+				mockEVMKeeper, s.network.App.GetStakingKeeperSDK(),
 				&transferKeeper,
 			))
 
