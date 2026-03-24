@@ -7,18 +7,21 @@ import (
 	feemarketkeeper "github.com/cosmos/evm/x/feemarket/keeper"
 	precisebankkeeper "github.com/cosmos/evm/x/precisebank/keeper"
 	evmkeeper "github.com/cosmos/evm/x/vm/keeper"
-	transferkeeper "github.com/cosmos/ibc-go/v10/modules/apps/transfer/keeper"
-	ibctesting "github.com/cosmos/ibc-go/v10/testing"
+	ibckeeper "github.com/cosmos/ibc-go/v8/modules/core/keeper"
+	transferkeeper "github.com/cosmos/ibc-go/v8/modules/apps/transfer/keeper"
 
 	storetypes "cosmossdk.io/store/types"
 	evidencekeeper "cosmossdk.io/x/evidence/keeper"
 	feegrantkeeper "cosmossdk.io/x/feegrant/keeper"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
+	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/mempool"
+	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	authzkeeper "github.com/cosmos/cosmos-sdk/x/authz/keeper"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
@@ -32,7 +35,16 @@ import (
 
 // EvmApp defines the interface for an EVM application.
 type EvmApp interface { //nolint:revive
-	ibctesting.TestingApp
+	servertypes.ABCI
+
+	// IBC testing app methods (from ibc-go/v8 TestingApp)
+	GetBaseApp() *baseapp.BaseApp
+	GetIBCKeeper() *ibckeeper.Keeper
+	GetTxConfig() client.TxConfig
+	AppCodec() codec.Codec
+	LastCommitID() storetypes.CommitID
+	LastBlockHeight() int64
+
 	runtime.AppI
 	InterfaceRegistry() types.InterfaceRegistry
 	ChainID() string

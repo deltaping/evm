@@ -184,7 +184,9 @@ func (pc precompileCallChange) Revert(s *StateDB) {
 	s.RevertMultiStore(pc.snapshot)
 
 	// Restore events to the state before this precompile call
-	s.cacheCtx.EventManager().OverrideEvents(pc.prevEvents)
+	newEM := sdk.NewEventManager()
+	newEM.EmitEvents(pc.prevEvents)
+	s.cacheCtx = s.cacheCtx.WithEventManager(newEM)
 
 	// Restore processed events counter
 	s.processedEventsCount = pc.prevProcessedEventCount

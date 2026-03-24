@@ -1,26 +1,22 @@
 package testutil
 
 import (
-	transfertypes "github.com/cosmos/ibc-go/v10/modules/apps/transfer/types"
+	transfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
 )
 
 var (
-	UosmoDenom    = transfertypes.NewDenom("uosmo", transfertypes.NewHop(transfertypes.PortID, "channel-0"))
+	UosmoDenom    = transfertypes.ParseDenomTrace("transfer/channel-0/uosmo")
 	UosmoIbcDenom = UosmoDenom.IBCDenom()
 
-	UatomDenom    = transfertypes.NewDenom("uatom", transfertypes.NewHop(transfertypes.PortID, "channel-1"))
+	UatomDenom    = transfertypes.ParseDenomTrace("transfer/channel-1/uatom")
 	UatomIbcDenom = UatomDenom.IBCDenom()
 
-	UAtomDenom    = transfertypes.NewDenom("aatom", transfertypes.NewHop(transfertypes.PortID, "channel-0"))
+	UAtomDenom    = transfertypes.ParseDenomTrace("transfer/channel-0/aatom")
 	UAtomIbcDenom = UatomDenom.IBCDenom()
 
-	UatomOsmoDenom = transfertypes.NewDenom(
-		"uatom",
-		transfertypes.NewHop(transfertypes.PortID, "channel-0"),
-		transfertypes.NewHop(transfertypes.PortID, "channel-1"),
-	)
+	UatomOsmoDenom    = transfertypes.ParseDenomTrace("transfer/channel-0/transfer/channel-1/uatom")
 	UatomOsmoIbcDenom = UatomOsmoDenom.IBCDenom()
 
-	AatomDenom    = transfertypes.NewDenom("aatom", transfertypes.NewHop(transfertypes.PortID, "channel-0"))
+	AatomDenom    = transfertypes.ParseDenomTrace("transfer/channel-0/aatom")
 	AatomIbcDenom = AatomDenom.IBCDenom()
 )

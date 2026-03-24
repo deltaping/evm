@@ -7,7 +7,7 @@ import (
 	utiltx "github.com/cosmos/evm/testutil/tx"
 	"github.com/cosmos/evm/x/erc20"
 	"github.com/cosmos/evm/x/erc20/types"
-	transfertypes "github.com/cosmos/ibc-go/v10/modules/apps/transfer/types"
+	transfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
 
 	"cosmossdk.io/math"
 )
@@ -22,7 +22,7 @@ type GenesisTestSuite struct {
 
 const osmoERC20ContractAddr = "0x5D87876250185593977a6F94aF98877a5E7eD60E"
 
-var osmoDenom = transfertypes.NewDenom("uosmo", transfertypes.NewHop(transfertypes.PortID, "channel-0"))
+var osmoDenom = transfertypes.ParseDenomTrace(transfertypes.PortID + "/channel-0/uosmo")
 
 func NewGenesisTestSuite(create network.CreateEvmApp, options ...network.ConfigOption) *GenesisTestSuite {
 	return &GenesisTestSuite{

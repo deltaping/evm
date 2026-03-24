@@ -10,13 +10,13 @@ import (
 
 	abci "github.com/cometbft/cometbft/abci/types"
 
-	clienttypes "github.com/cosmos/ibc-go/v10/modules/core/02-client/types"
-	connectiontypes "github.com/cosmos/ibc-go/v10/modules/core/03-connection/types"
-	channeltypes "github.com/cosmos/ibc-go/v10/modules/core/04-channel/types"
-	commitmenttypes "github.com/cosmos/ibc-go/v10/modules/core/23-commitment/types"
-	host "github.com/cosmos/ibc-go/v10/modules/core/24-host"
-	"github.com/cosmos/ibc-go/v10/modules/core/exported"
-	ibctm "github.com/cosmos/ibc-go/v10/modules/light-clients/07-tendermint"
+	clienttypes "github.com/cosmos/ibc-go/v8/modules/core/02-client/types"
+	connectiontypes "github.com/cosmos/ibc-go/v8/modules/core/03-connection/types"
+	channeltypes "github.com/cosmos/ibc-go/v8/modules/core/04-channel/types"
+	commitmenttypes "github.com/cosmos/ibc-go/v8/modules/core/23-commitment/types"
+	host "github.com/cosmos/ibc-go/v8/modules/core/24-host"
+	"github.com/cosmos/ibc-go/v8/modules/core/exported"
+	ibctm "github.com/cosmos/ibc-go/v8/modules/light-clients/07-tendermint"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 )
@@ -253,12 +253,13 @@ func (endpoint *Endpoint) ConnOpenTry() error {
 	err := endpoint.UpdateClient()
 	require.NoError(endpoint.Chain.TB, err)
 
-	initProof, proofHeight := endpoint.QueryConnectionHandshakeProof()
+	counterpartyClient, clientProof, consensusProof, consensusHeight, initProof, proofHeight := endpoint.QueryConnectionHandshakeProof()
 
 	msg := connectiontypes.NewMsgConnectionOpenTry(
 		endpoint.ClientID, endpoint.Counterparty.ConnectionID, endpoint.Counterparty.ClientID,
-		endpoint.Counterparty.Chain.GetPrefix(), []*connectiontypes.Version{ConnectionVersion},
-		endpoint.ConnectionConfig.DelayPeriod, initProof, proofHeight,
+		counterpartyClient, endpoint.Counterparty.Chain.GetPrefix(), []*connectiontypes.Version{ConnectionVersion},
+		endpoint.ConnectionConfig.DelayPeriod, initProof, clientProof, consensusProof,
+		proofHeight, consensusHeight,
 		endpoint.Chain.SenderAccount.GetAddress().String(),
 	)
 	res, err := endpoint.Chain.SendMsgs(msg)
@@ -279,11 +280,13 @@ func (endpoint *Endpoint) ConnOpenAck() error {
 	err := endpoint.UpdateClient()
 	require.NoError(endpoint.Chain.TB, err)
 
-	tryProof, proofHeight := endpoint.QueryConnectionHandshakeProof()
+	counterpartyClient, clientProof, consensusProof, consensusHeight, tryProof, proofHeight := endpoint.QueryConnectionHandshakeProof()
 
 	msg := connectiontypes.NewMsgConnectionOpenAck(
-		endpoint.ConnectionID, endpoint.Counterparty.ConnectionID, // testing doesn't use flexible selection
-		tryProof, proofHeight, ConnectionVersion,
+		endpoint.ConnectionID, endpoint.Counterparty.ConnectionID, counterpartyClient, // testing doesn't use flexible selection
+		tryProof, clientProof, consensusProof,
+		proofHeight, consensusHeight,
+		ConnectionVersion,
 		endpoint.Chain.SenderAccount.GetAddress().String(),
 	)
 	return endpoint.Chain.sendMsgs(msg)
@@ -306,15 +309,32 @@ func (endpoint *Endpoint) ConnOpenConfirm() error {
 }
 
 // QueryConnectionHandshakeProof returns all the proofs necessary to execute OpenTry or Open Ack of
-// the connection handshakes. It returns the proof of the counterparty connection and the proof height.
+// the connection handshakes. It returns the counterparty client state, proof of the counterparty
+// client state, proof of the counterparty consensus state, the consensus state height, proof of
+// the counterparty connection, and the proof height for all the proofs returned.
 func (endpoint *Endpoint) QueryConnectionHandshakeProof() (
+	clientState exported.ClientState, clientProof,
+	consensusProof []byte, consensusHeight clienttypes.Height,
 	connectionProof []byte, proofHeight clienttypes.Height,
 ) {
+	// obtain the client state on the counterparty chain
+	clientState = endpoint.Counterparty.Chain.GetClientState(endpoint.Counterparty.ClientID)
+
+	// query proof for the client state on the counterparty
+	clientKey := host.FullClientStateKey(endpoint.Counterparty.ClientID)
+	clientProof, proofHeight = endpoint.Counterparty.QueryProof(clientKey)
+
+	consensusHeight = clientState.GetLatestHeight().(clienttypes.Height)
+
+	// query proof for the consensus state on the counterparty
+	consensusKey := host.FullConsensusStateKey(endpoint.Counterparty.ClientID, consensusHeight)
+	consensusProof, _ = endpoint.Counterparty.QueryProofAtHeight(consensusKey, proofHeight.GetRevisionHeight())
+
 	// query proof for the connection on the counterparty
 	connectionKey := host.ConnectionKey(endpoint.Counterparty.ConnectionID)
-	connectionProof, proofHeight = endpoint.Counterparty.QueryProof(connectionKey)
+	connectionProof, _ = endpoint.Counterparty.QueryProofAtHeight(connectionKey, proofHeight.GetRevisionHeight())
 
-	return connectionProof, proofHeight
+	return clientState, clientProof, consensusProof, consensusHeight, connectionProof, proofHeight
 }
 
 var sequenceNumber int
@@ -449,8 +469,10 @@ func (endpoint *Endpoint) SendPacket(
 	timeoutTimestamp uint64,
 	data []byte,
 ) (uint64, error) {
+	channelCap := endpoint.Chain.GetChannelCapability(endpoint.ChannelConfig.PortID, endpoint.ChannelID)
+
 	// no need to send message, acting as a module
-	sequence, err := endpoint.Chain.App.GetIBCKeeper().ChannelKeeper.SendPacket(endpoint.Chain.GetContext(), endpoint.ChannelConfig.PortID, endpoint.ChannelID, timeoutHeight, timeoutTimestamp, data)
+	sequence, err := endpoint.Chain.App.GetIBCKeeper().ChannelKeeper.SendPacket(endpoint.Chain.GetContext(), channelCap, endpoint.ChannelConfig.PortID, endpoint.ChannelID, timeoutHeight, timeoutTimestamp, data)
 	if err != nil {
 		return 0, err
 	}
@@ -502,8 +524,10 @@ func (endpoint *Endpoint) RecvPacketWithResult(packet channeltypes.Packet) (*abc
 // WriteAcknowledgement writes an acknowledgement on the channel associated with the endpoint.
 // The counterparty client is updated.
 func (endpoint *Endpoint) WriteAcknowledgement(ack exported.Acknowledgement, packet exported.PacketI) error {
+	channelCap := endpoint.Chain.GetChannelCapability(packet.GetDestPort(), packet.GetDestChannel())
+
 	// no need to send message, acting as a handler
-	err := endpoint.Chain.App.GetIBCKeeper().ChannelKeeper.WriteAcknowledgement(endpoint.Chain.GetContext(), packet, ack)
+	err := endpoint.Chain.App.GetIBCKeeper().ChannelKeeper.WriteAcknowledgement(endpoint.Chain.GetContext(), channelCap, packet, ack)
 	if err != nil {
 		return err
 	}

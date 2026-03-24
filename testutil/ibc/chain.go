@@ -22,14 +22,15 @@ import (
 	"github.com/cosmos/evm/crypto/ethsecp256k1"
 	"github.com/cosmos/evm/testutil/tx"
 	"github.com/cosmos/evm/x/vm/types"
-	clienttypes "github.com/cosmos/ibc-go/v10/modules/core/02-client/types"
-	channeltypes "github.com/cosmos/ibc-go/v10/modules/core/04-channel/types"
-	commitmenttypes "github.com/cosmos/ibc-go/v10/modules/core/23-commitment/types"
-	host "github.com/cosmos/ibc-go/v10/modules/core/24-host"
-	"github.com/cosmos/ibc-go/v10/modules/core/exported"
-	ibctm "github.com/cosmos/ibc-go/v10/modules/light-clients/07-tendermint"
-	ibctesting "github.com/cosmos/ibc-go/v10/testing"
-	"github.com/cosmos/ibc-go/v10/testing/simapp"
+	capabilitytypes "github.com/cosmos/ibc-go/modules/capability/types"
+	clienttypes "github.com/cosmos/ibc-go/v8/modules/core/02-client/types"
+	channeltypes "github.com/cosmos/ibc-go/v8/modules/core/04-channel/types"
+	commitmenttypes "github.com/cosmos/ibc-go/v8/modules/core/23-commitment/types"
+	host "github.com/cosmos/ibc-go/v8/modules/core/24-host"
+	"github.com/cosmos/ibc-go/v8/modules/core/exported"
+	ibctm "github.com/cosmos/ibc-go/v8/modules/light-clients/07-tendermint"
+	ibctesting "github.com/cosmos/ibc-go/v8/testing"
+	"github.com/cosmos/ibc-go/v8/testing/simapp"
 
 	errorsmod "cosmossdk.io/errors"
 	sdkmath "cosmossdk.io/math"
@@ -65,7 +66,7 @@ type TestChain struct {
 	testing.TB
 
 	Coordinator           *Coordinator
-	App                   ibctesting.TestingApp
+	App                   TestingApp
 	ChainID               string
 	LatestCommittedHeader *ibctm.Header   // header for last block height committed
 	ProposedHeader        cmtproto.Header // proposed (uncommitted) header for current block height
@@ -438,7 +439,7 @@ func (chain *TestChain) SendEvmTx(
 		ProposerAddress:    ctx.BlockHeader().ProposerAddress,
 	}
 
-	res, err := app.FinalizeBlock(&req)
+	res, err := chain.App.FinalizeBlock(&req)
 	require.NoError(chain.TB, err)
 
 	chain.commitBlock(res)
@@ -667,7 +668,9 @@ func MakeBlockID(hash []byte, partSetSize uint32, partSetHash []byte) cmttypes.B
 // GetClientLatestHeight returns the latest height for the client state with the given client identifier.
 // If an invalid client identifier is provided then a zero value height will be returned and testing will fail.
 func (chain *TestChain) GetClientLatestHeight(clientID string) exported.Height {
-	latestHeight := chain.App.GetIBCKeeper().ClientKeeper.GetClientLatestHeight(chain.GetContext(), clientID)
+	clientState, found := chain.App.GetIBCKeeper().ClientKeeper.GetClientState(chain.GetContext(), clientID)
+	require.True(chain.TB, found)
+	latestHeight := clientState.GetLatestHeight()
 	require.False(chain.TB, latestHeight.IsZero())
 	return latestHeight
 }
@@ -695,6 +698,17 @@ func (chain *TestChain) DeleteKey(key []byte) {
 	storeKey := chain.GetSimApp().GetKey(exported.StoreKey)
 	kvStore := chain.GetContext().KVStore(storeKey)
 	kvStore.Delete(key)
+}
+
+// GetChannelCapability returns the channel capability for the given portID and channelID.
+// The capability must exist, otherwise testing will fail.
+// This method uses the scoped IBC keeper via type assertion against ibctesting.TestingApp.
+func (chain *TestChain) GetChannelCapability(portID, channelID string) *capabilitytypes.Capability {
+	ibcTestingApp, ok := chain.App.(ibctesting.TestingApp)
+	require.True(chain.TB, ok, "app does not implement ibctesting.TestingApp (missing GetScopedIBCKeeper)")
+	capability, ok := ibcTestingApp.GetScopedIBCKeeper().GetCapability(chain.GetContext(), host.ChannelCapabilityPath(portID, channelID))
+	require.True(chain.TB, ok)
+	return capability
 }
 
 // IBCClientHeader will construct a 07-tendermint Header to update the light client

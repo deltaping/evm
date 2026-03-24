@@ -15,7 +15,7 @@ import (
 
 	dbm "github.com/cosmos/cosmos-db"
 	feemarkettypes "github.com/cosmos/evm/x/feemarket/types"
-	ibctesting "github.com/cosmos/ibc-go/v10/testing"
+	ibctesting "github.com/cosmos/ibc-go/v8/testing"
 
 	"cosmossdk.io/log"
 	"cosmossdk.io/math"

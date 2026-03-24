@@ -12,9 +12,8 @@ import (
 
 	dbm "github.com/cosmos/cosmos-db"
 	evmtypes "github.com/cosmos/evm/x/vm/types"
-	"github.com/cosmos/ibc-go/v10/modules/core/keeper"
-	ibctesting "github.com/cosmos/ibc-go/v10/testing"
-	"github.com/cosmos/ibc-go/v10/testing/simapp"
+	"github.com/cosmos/ibc-go/v8/modules/core/keeper"
+	"github.com/cosmos/ibc-go/v8/testing/simapp"
 
 	"cosmossdk.io/log"
 	sdkmath "cosmossdk.io/math"
@@ -49,6 +48,14 @@ type TestingApp interface {
 	LastBlockHeight() int64
 }
 
+// DefaultTestingAppInit is the default app creator used when no custom creator is specified.
+// It can be overridden in tests to use a custom app.
+var DefaultTestingAppInit AppCreator = func() (TestingApp, map[string]json.RawMessage) {
+	db := dbm.NewMemDB()
+	app := simapp.NewSimApp(log.NewNopLogger(), db, nil, true, simtestutil.EmptyAppOptions{})
+	return app, app.DefaultGenesis()
+}
+
 func SetupTestingApp() (TestingApp, map[string]json.RawMessage) {
 	db := dbm.NewMemDB()
 	app := simapp.NewSimApp(log.NewNopLogger(), db, nil, true, simtestutil.EmptyAppOptions{})
@@ -61,10 +68,10 @@ func SetupTestingApp() (TestingApp, map[string]json.RawMessage) {
 // account. A Nop logger is set in SimApp.
 func SetupWithGenesisValSet(tb testing.TB, valSet *cmttypes.ValidatorSet, genAccs []authtypes.GenesisAccount, chainID string, powerReduction sdkmath.Int, metadata []banktypes.Metadata, balances ...banktypes.Balance) TestingApp {
 	tb.Helper()
-	return setupWithGenesisValSet(tb, valSet, genAccs, chainID, powerReduction, ibctesting.DefaultTestingAppInit, metadata, balances...)
+	return setupWithGenesisValSet(tb, valSet, genAccs, chainID, powerReduction, DefaultTestingAppInit, metadata, balances...)
 }
 
-func setupWithGenesisValSet(tb testing.TB, valSet *cmttypes.ValidatorSet, genAccs []authtypes.GenesisAccount, chainID string, powerReduction sdkmath.Int, appCreator ibctesting.AppCreator, metadata []banktypes.Metadata, balances ...banktypes.Balance) TestingApp {
+func setupWithGenesisValSet(tb testing.TB, valSet *cmttypes.ValidatorSet, genAccs []authtypes.GenesisAccount, chainID string, powerReduction sdkmath.Int, appCreator AppCreator, metadata []banktypes.Metadata, balances ...banktypes.Balance) TestingApp {
 	tb.Helper()
 	app, genesisState := appCreator()
 

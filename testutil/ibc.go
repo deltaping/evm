@@ -1,17 +1,16 @@
 package testutil
 
 import (
-	transfertypes "github.com/cosmos/ibc-go/v10/modules/apps/transfer/types"
+	transfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
 )
 
 func GetVoucherDenomFromPacketData(
-	data transfertypes.InternalTransferRepresentation,
+	data transfertypes.FungibleTokenPacketData,
 	destPort string,
 	destChannel string,
 ) string {
-	token := data.Token
-	trace := []transfertypes.Hop{transfertypes.NewHop(destPort, destChannel)}
-	token.Denom.Trace = append(trace, token.Denom.Trace...)
-	voucherDenom := token.Denom.IBCDenom()
-	return voucherDenom
+	// In ibc-go v8, build the voucher denom by prepending the hop path to the denom
+	fullPath := destPort + "/" + destChannel + "/" + data.Denom
+	trace := transfertypes.ParseDenomTrace(fullPath)
+	return trace.IBCDenom()
 }
