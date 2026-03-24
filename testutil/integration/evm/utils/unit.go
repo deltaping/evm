@@ -16,6 +16,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
+	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 )
 
 const (
@@ -30,7 +31,7 @@ func RegisterEvmosERC20Coins(
 	network network.UnitTestNetwork,
 	tokenReceiver sdk.AccAddress,
 ) (erc20types.TokenPair, error) {
-	bondDenom, err := network.App.GetStakingKeeper().BondDenom(network.GetContext())
+	bondDenom, err := network.App.GetStakingKeeper().(*stakingkeeper.Keeper).BondDenom(network.GetContext())
 	if err != nil {
 		return erc20types.TokenPair{}, err
 	}

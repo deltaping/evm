@@ -9,6 +9,7 @@ import (
 	evmkeeper "github.com/cosmos/evm/x/vm/keeper"
 	ibckeeper "github.com/cosmos/ibc-go/v8/modules/core/keeper"
 	transferkeeper "github.com/cosmos/ibc-go/v8/modules/apps/transfer/keeper"
+	ibctestingtypes "github.com/cosmos/ibc-go/v8/testing/types"
 
 	storetypes "cosmossdk.io/store/types"
 	evidencekeeper "cosmossdk.io/x/evidence/keeper"
@@ -30,7 +31,6 @@ import (
 	govkeeper "github.com/cosmos/cosmos-sdk/x/gov/keeper"
 	mintkeeper "github.com/cosmos/cosmos-sdk/x/mint/keeper"
 	slashingkeeper "github.com/cosmos/cosmos-sdk/x/slashing/keeper"
-	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 )
 
 // EvmApp defines the interface for an EVM application.
@@ -59,7 +59,7 @@ type EvmApp interface { //nolint:revive
 	GetAccountKeeper() authkeeper.AccountKeeper
 	GetAuthzKeeper() authzkeeper.Keeper
 	GetDistrKeeper() distrkeeper.Keeper
-	GetStakingKeeper() *stakingkeeper.Keeper
+	GetStakingKeeper() ibctestingtypes.StakingKeeper
 	GetMintKeeper() mintkeeper.Keeper
 	GetPreciseBankKeeper() *precisebankkeeper.Keeper
 	GetFeeGrantKeeper() feegrantkeeper.Keeper

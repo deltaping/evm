@@ -7,7 +7,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
-	sdkmempool "github.com/cosmos/cosmos-sdk/types/mempool"
 
 	evmconfig "github.com/cosmos/evm/config"
 	evmmempool "github.com/cosmos/evm/mempool"
@@ -46,11 +45,6 @@ func (app *EVMD) configureEVMMempool(appOpts servertypes.AppOptions, logger log.
 	app.SetMempool(evmMempool)
 
 	abciProposalHandler := baseapp.NewDefaultProposalHandler(evmMempool, app)
-	abciProposalHandler.SetSignerExtractionAdapter(
-		evmmempool.NewEthSignerExtractionAdapter(
-			sdkmempool.NewDefaultSignerExtractionAdapter(),
-		),
-	)
 	app.SetPrepareProposal(abciProposalHandler.PrepareProposalHandler())
 
 	return nil
