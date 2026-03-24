@@ -9,8 +9,8 @@ import (
 
 	"github.com/cosmos/evm/precompiles/erc20"
 	"github.com/cosmos/evm/testutil"
-	transferkeeper "github.com/cosmos/ibc-go/v10/modules/apps/transfer/keeper"
-	"github.com/cosmos/ibc-go/v10/modules/apps/transfer/types"
+	transferkeeper "github.com/cosmos/ibc-go/v8/modules/apps/transfer/keeper"
+	"github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
 
 	sdkmath "cosmossdk.io/math"
 
@@ -23,13 +23,13 @@ import (
 // Define useful variables for tests here.
 var (
 	// tooShort is a denomination with a name that will raise the "denom too short" error
-	tooShort = types.NewDenom("ab", types.NewHop(types.PortID, "channel-0"))
+	tooShort = types.ParseDenomTrace(types.PortID + "/channel-0/" + "ab")
 	// validDenom is a denomination with a valid IBC voucher name
-	validDenom = types.NewDenom("uosmo", types.NewHop(types.PortID, "channel-0"))
+	validDenom = types.ParseDenomTrace(types.PortID + "/channel-0/" + "uosmo")
 	// validAttoDenom is a denomination with a valid IBC voucher name and 18 decimals
-	validAttoDenom = types.NewDenom("aatom", types.NewHop(types.PortID, "channel-0"))
+	validAttoDenom = types.ParseDenomTrace(types.PortID + "/channel-0/" + "aatom")
 	// validDenomNoMicroAtto is a denomination with a valid IBC voucher name but no micro or atto prefix
-	validDenomNoMicroAtto = types.NewDenom("matom", types.NewHop(types.PortID, "channel-0"))
+	validDenomNoMicroAtto = types.ParseDenomTrace(types.PortID + "/channel-0/" + "matom")
 
 	// --------------------
 	// Variables for coin with valid metadata
@@ -125,14 +125,14 @@ func (s *PrecompileTestSuite) TestNameSymbol() {
 		},
 		{
 			name:        "fail - denom not found",
-			denom:       types.NewDenom("notfound", types.NewHop(types.PortID, "channel-0")).IBCDenom(),
+			denom:       types.ParseDenomTrace(types.PortID + "/channel-0/" + "notfound").IBCDenom(),
 			errContains: vm.ErrExecutionReverted.Error(),
 		},
 		{
 			name:  "fail - invalid denom (too short < 3 chars)",
 			denom: tooShort.IBCDenom(),
 			malleate: func(ctx sdk.Context, _ bankkeeper.Keeper, keeper transferkeeper.Keeper) {
-				keeper.SetDenom(ctx, tooShort)
+				keeper.SetDenomTrace(ctx, tooShort)
 			},
 			errContains: vm.ErrExecutionReverted.Error(),
 		},
@@ -145,7 +145,7 @@ func (s *PrecompileTestSuite) TestNameSymbol() {
 			name:  "pass - valid ibc denom without metadata and neither atto nor micro prefix",
 			denom: validDenomNoMicroAtto.IBCDenom(),
 			malleate: func(ctx sdk.Context, _ bankkeeper.Keeper, keeper transferkeeper.Keeper) {
-				keeper.SetDenom(ctx, validDenomNoMicroAtto)
+				keeper.SetDenomTrace(ctx, validDenomNoMicroAtto)
 			},
 			expPass:   true,
 			expName:   "Atom",
@@ -170,7 +170,7 @@ func (s *PrecompileTestSuite) TestNameSymbol() {
 			name:  "pass - valid ibc denom without metadata",
 			denom: validDenom.IBCDenom(),
 			malleate: func(ctx sdk.Context, _ bankkeeper.Keeper, keeper transferkeeper.Keeper) {
-				keeper.SetDenom(ctx, validDenom)
+				keeper.SetDenomTrace(ctx, validDenom)
 			},
 			expPass:   true,
 			expName:   "Osmo",
@@ -236,7 +236,7 @@ func (s *PrecompileTestSuite) TestDecimals() {
 		},
 		{
 			name:        "fail - denom not found",
-			denom:       types.NewDenom("notfound", types.NewHop(types.PortID, "channel-0")).IBCDenom(),
+			denom:       types.ParseDenomTrace(types.PortID + "/channel-0/" + "notfound").IBCDenom(),
 			errContains: vm.ErrExecutionReverted.Error(),
 		},
 		{
@@ -248,7 +248,7 @@ func (s *PrecompileTestSuite) TestDecimals() {
 			name:  "fail - valid ibc denom without metadata and neither atto nor micro prefix",
 			denom: validDenomNoMicroAtto.IBCDenom(),
 			malleate: func(ctx sdk.Context, _ bankkeeper.Keeper, keeper transferkeeper.Keeper) {
-				keeper.SetDenom(ctx, validDenomNoMicroAtto)
+				keeper.SetDenomTrace(ctx, validDenomNoMicroAtto)
 			},
 			errContains: vm.ErrExecutionReverted.Error(),
 		},
@@ -256,7 +256,7 @@ func (s *PrecompileTestSuite) TestDecimals() {
 			name:  "pass - invalid denom (too short < 3 chars)",
 			denom: tooShort.IBCDenom(),
 			malleate: func(ctx sdk.Context, _ bankkeeper.Keeper, keeper transferkeeper.Keeper) {
-				keeper.SetDenom(ctx, tooShort)
+				keeper.SetDenomTrace(ctx, tooShort)
 			},
 			expPass:     true, // TODO: do we want to check in decimals query for the above error?
 			expDecimals: 18,   // expect 18 decimals here because of "a" prefix
@@ -279,7 +279,7 @@ func (s *PrecompileTestSuite) TestDecimals() {
 			name:  "pass - valid ibc denom without metadata",
 			denom: validDenom.IBCDenom(),
 			malleate: func(ctx sdk.Context, _ bankkeeper.Keeper, keeper transferkeeper.Keeper) {
-				keeper.SetDenom(ctx, validDenom)
+				keeper.SetDenomTrace(ctx, validDenom)
 			},
 			expPass:     true,
 			expDecimals: 6,
@@ -288,7 +288,7 @@ func (s *PrecompileTestSuite) TestDecimals() {
 			name:  "pass - valid ibc denom without metadata and 18 decimals",
 			denom: validAttoDenom.IBCDenom(),
 			malleate: func(ctx sdk.Context, _ bankkeeper.Keeper, keeper transferkeeper.Keeper) {
-				keeper.SetDenom(ctx, validAttoDenom)
+				keeper.SetDenomTrace(ctx, validAttoDenom)
 			},
 			expPass:     true,
 			expDecimals: 18,

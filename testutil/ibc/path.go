@@ -6,10 +6,8 @@ import (
 
 	abci "github.com/cometbft/cometbft/abci/types"
 
-	"github.com/cosmos/gogoproto/proto"
-	transfertypes "github.com/cosmos/ibc-go/v10/modules/apps/transfer/types"
-	channeltypes "github.com/cosmos/ibc-go/v10/modules/core/04-channel/types"
-	channeltypesv2 "github.com/cosmos/ibc-go/v10/modules/core/04-channel/v2/types"
+	transfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
+	channeltypes "github.com/cosmos/ibc-go/v8/modules/core/04-channel/types"
 )
 
 // Path contains two endpoints representing two chains connected over IBC
@@ -40,8 +38,8 @@ func NewTransferPath(chainA, chainB *TestChain) *Path {
 	path := NewPath(chainA, chainB)
 	path.EndpointA.ChannelConfig.PortID = TransferPort
 	path.EndpointB.ChannelConfig.PortID = TransferPort
-	path.EndpointA.ChannelConfig.Version = transfertypes.V1
-	path.EndpointB.ChannelConfig.Version = transfertypes.V1
+	path.EndpointA.ChannelConfig.Version = transfertypes.Version
+	path.EndpointB.ChannelConfig.Version = transfertypes.Version
 
 	return path
 }
@@ -75,7 +73,7 @@ func (path *Path) RelayPacket(packet channeltypes.Packet) error {
 // - An error if a relay step fails or the packet commitment does not exist on either endpoint.
 func (path *Path) RelayPacketWithResults(packet channeltypes.Packet) (*abci.ExecTxResult, []byte, error) {
 	pc := path.EndpointA.Chain.App.GetIBCKeeper().ChannelKeeper.GetPacketCommitment(path.EndpointA.Chain.GetContext(), packet.GetSourcePort(), packet.GetSourceChannel(), packet.GetSequence())
-	if bytes.Equal(pc, channeltypes.CommitPacket(packet)) {
+	if bytes.Equal(pc, channeltypes.CommitPacket(path.EndpointA.Chain.App.AppCodec(), packet)) {
 		// packet found, relay from A to B
 		if err := path.EndpointB.UpdateClient(); err != nil {
 			return nil, nil, err
@@ -99,7 +97,7 @@ func (path *Path) RelayPacketWithResults(packet channeltypes.Packet) (*abci.Exec
 	}
 
 	pc = path.EndpointB.Chain.App.GetIBCKeeper().ChannelKeeper.GetPacketCommitment(path.EndpointB.Chain.GetContext(), packet.GetSourcePort(), packet.GetSourceChannel(), packet.GetSequence())
-	if bytes.Equal(pc, channeltypes.CommitPacket(packet)) {
+	if bytes.Equal(pc, channeltypes.CommitPacket(path.EndpointB.Chain.App.AppCodec(), packet)) {
 		// packet found, relay B to A
 		if err := path.EndpointA.UpdateClient(); err != nil {
 			return nil, nil, err
@@ -125,79 +123,6 @@ func (path *Path) RelayPacketWithResults(packet channeltypes.Packet) (*abci.Exec
 	return nil, nil, errors.New("packet commitment does not exist on either endpoint for provided packet")
 }
 
-// RelayPacketV2 attempts to relay the v2 packet first on EndpointA and then on EndpointB
-// if EndpointA does not contain a packet commitment for that packet. An error is returned
-// if a relay step fails or the packet commitment does not exist on either endpoint.
-func (path *Path) RelayPacketV2(packet channeltypesv2.Packet) error {
-	_, _, err := path.RelayPacketWithResultsV2(packet)
-	return err
-}
-
-// RelayPacketWithResultsV2 attempts to relay the ibc v2 packet first on EndpointA and then on EndpointB
-// if EndpointA does not contain a packet commitment for that packet. The function returns:
-// - The result of the packet receive transaction.
-// - The acknowledgement written on the receiving chain.
-// - An error if a relay step fails or the packet commitment does not exist on either endpoint.
-func (path *Path) RelayPacketWithResultsV2(packet channeltypesv2.Packet) (*abci.ExecTxResult, []byte, error) {
-	pc := path.EndpointA.Chain.App.GetIBCKeeper().ChannelKeeperV2.GetPacketCommitment(path.EndpointA.Chain.GetContext(), packet.GetSourceClient(), packet.GetSequence())
-	if bytes.Equal(pc, channeltypesv2.CommitPacket(packet)) {
-		// packet found, relay from A to B
-		if err := path.EndpointB.UpdateClient(); err != nil {
-			return nil, nil, err
-		}
-
-		res, err := path.EndpointB.MsgRecvPacketWithResult(packet)
-		if err != nil {
-			return nil, nil, err
-		}
-
-		ack, err := ParseAckV2FromEvents(res.Events)
-		if err != nil {
-			return nil, nil, err
-		}
-		var ackRes channeltypesv2.Acknowledgement
-		err = proto.Unmarshal(ack, &ackRes)
-		if err != nil {
-			return nil, nil, err
-		}
-		if err := path.EndpointA.MsgAcknowledgePacket(packet, ackRes); err != nil {
-			return nil, nil, err
-		}
-
-		return res, ack, nil
-	}
-
-	pc = path.EndpointB.Chain.App.GetIBCKeeper().ChannelKeeperV2.GetPacketCommitment(path.EndpointB.Chain.GetContext(), packet.GetSourceClient(), packet.GetSequence())
-	if bytes.Equal(pc, channeltypesv2.CommitPacket(packet)) {
-		// packet found, relay B to A
-		if err := path.EndpointA.UpdateClient(); err != nil {
-			return nil, nil, err
-		}
-
-		res, err := path.EndpointA.MsgRecvPacketWithResult(packet)
-		if err != nil {
-			return nil, nil, err
-		}
-
-		ack, err := ParseAckV2FromEvents(res.Events)
-		if err != nil {
-			return nil, nil, err
-		}
-		var ackRes channeltypesv2.Acknowledgement
-		err = proto.Unmarshal(ack, &ackRes)
-		if err != nil {
-			return nil, nil, err
-		}
-		if err := path.EndpointB.MsgAcknowledgePacket(packet, ackRes); err != nil {
-			return nil, nil, err
-		}
-
-		return res, ack, nil
-	}
-
-	return nil, nil, errors.New("packet commitment does not exist on either endpoint for provided packet")
-}
-
 // Reversed returns a new path with endpoints reversed.
 func (path *Path) Reversed() *Path {
 	reversedPath := *path
@@ -214,14 +139,6 @@ func (path *Path) Setup() {
 	path.CreateChannels()
 }
 
-// SetupV2 constructs clients on both sides and then provides the counterparties for both sides
-// This is all that is necessary for path setup with the IBC v2 protocol
-func (path *Path) SetupV2() {
-	path.SetupClients()
-
-	path.SetupCounterparties()
-}
-
 // SetupClients is a helper function to create clients on both chains. It assumes the
 // caller does not anticipate any errors.
 func (path *Path) SetupClients() {
@@ -232,18 +149,6 @@ func (path *Path) SetupClients() {
 
 	err = path.EndpointB.CreateClient()
 	if err != nil {
-		panic(err)
-	}
-}
-
-// SetupCounterparties is a helper function to set the counterparties supporting IBC v2 on both
-// chains. It assumes the caller does not anticipate any errors.
-func (path *Path) SetupCounterparties() {
-	if err := path.EndpointB.RegisterCounterparty(); err != nil {
-		panic(err)
-	}
-
-	if err := path.EndpointA.RegisterCounterparty(); err != nil {
 		panic(err)
 	}
 }

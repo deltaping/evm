@@ -3,8 +3,8 @@ package ibc
 import (
 	"strings"
 
-	transfertypes "github.com/cosmos/ibc-go/v10/modules/apps/transfer/types"
-	channeltypes "github.com/cosmos/ibc-go/v10/modules/core/04-channel/types"
+	transfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
+	channeltypes "github.com/cosmos/ibc-go/v8/modules/core/04-channel/types"
 
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/math"
@@ -32,25 +32,25 @@ func GetTransferAmount(packet channeltypes.Packet) (string, error) {
 	return data.Amount, nil
 }
 
-// GetDenom returns the denomination from the corresponding IBC denomination. If the
+// GetDenom returns the denomination trace from the corresponding IBC denomination. If the
 // denomination is not an IBC voucher or the trace is not found, it returns an error.
 func GetDenom(
 	transferKeeper TransferKeeper,
 	ctx sdk.Context,
 	voucherDenom string,
-) (transfertypes.Denom, error) {
+) (transfertypes.DenomTrace, error) {
 	if !strings.HasPrefix(voucherDenom, "ibc/") {
-		return transfertypes.Denom{}, errorsmod.Wrapf(ErrNoIBCVoucherDenom, "denom: %s", voucherDenom)
+		return transfertypes.DenomTrace{}, errorsmod.Wrapf(ErrNoIBCVoucherDenom, "denom: %s", voucherDenom)
 	}
 
 	hash, err := transfertypes.ParseHexHash(voucherDenom[4:])
 	if err != nil {
-		return transfertypes.Denom{}, err
+		return transfertypes.DenomTrace{}, err
 	}
 
-	denom, found := transferKeeper.GetDenom(ctx, hash)
+	denom, found := transferKeeper.GetDenomTrace(ctx, hash)
 	if !found {
-		return transfertypes.Denom{}, ErrDenomNotFound
+		return transfertypes.DenomTrace{}, ErrDenomNotFound
 	}
 
 	return denom, nil

@@ -9,7 +9,6 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/evm/x/vm/types"
-	ibctesting "github.com/cosmos/ibc-go/v10/testing"
 )
 
 var (
@@ -29,7 +28,7 @@ type Coordinator struct {
 }
 
 // NewCoordinator initializes Coordinator with N EVM TestChain's (Cosmos EVM apps) and M Cosmos chains (Simulation Apps)
-func NewCoordinator(t *testing.T, nEVMChains, mCosmosChains int, evmAppCreator ibctesting.AppCreator) *Coordinator {
+func NewCoordinator(t *testing.T, nEVMChains, mCosmosChains int, evmAppCreator AppCreator) *Coordinator {
 	t.Helper()
 	chains := make(map[string]*TestChain)
 	coord := &Coordinator{
@@ -37,7 +36,7 @@ func NewCoordinator(t *testing.T, nEVMChains, mCosmosChains int, evmAppCreator i
 		CurrentTime: globalStartTime,
 	}
 
-	ibctesting.DefaultTestingAppInit = evmAppCreator
+	DefaultTestingAppInit = evmAppCreator
 	for i := 1; i <= nEVMChains; i++ { //nolint: staticcheck // this variable does change when the number of evmchains is 2
 		configurator := types.NewEVMConfigurator()
 		configurator.ResetTestConfig()
@@ -49,7 +48,7 @@ func NewCoordinator(t *testing.T, nEVMChains, mCosmosChains int, evmAppCreator i
 	}
 
 	// setup Cosmos chains
-	ibctesting.DefaultTestingAppInit = ibctesting.SetupTestingApp
+	DefaultTestingAppInit = SetupTestingApp
 	for j := 1 + nEVMChains; j <= nEVMChains+mCosmosChains; j++ {
 		chainID := GetChainID(j)
 		chains[chainID] = NewTestChain(t, false, coord, chainID)
