@@ -116,7 +116,7 @@ func (s *PrecompileTestSuite) SetupTest() {
 	txFactory := factory.New(nw, grpcHandler)
 
 	ctx := nw.GetContext()
-	sk := nw.App.GetStakingKeeper()
+	sk := nw.App.GetStakingKeeperSDK()
 	bondDenom, err := sk.BondDenom(ctx)
 	if err != nil {
 		panic(err)
@@ -134,7 +134,7 @@ func (s *PrecompileTestSuite) SetupTest() {
 		s.network.App.GetDistrKeeper(),
 		distrkeeper.NewMsgServerImpl(s.network.App.GetDistrKeeper()),
 		distrkeeper.NewQuerier(s.network.App.GetDistrKeeper()),
-		*s.network.App.GetStakingKeeper(),
+		*s.network.App.GetStakingKeeperSDK(),
 		s.network.App.GetBankKeeper(),
 		evmaddress.NewEvmCodec(sdk.GetConfig().GetBech32AccountAddrPrefix()),
 	)

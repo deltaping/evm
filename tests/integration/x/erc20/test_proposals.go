@@ -162,7 +162,7 @@ func (s *KeeperTestSuite) TestRegisterERC20() {
 				erc20Keeper := keeper.NewKeeper(
 					s.network.App.GetKey("erc20"), s.network.App.AppCodec(),
 					authtypes.NewModuleAddress(govtypes.ModuleName), s.network.App.GetAccountKeeper(),
-					s.network.App.GetBankKeeper(), mockEVMKeeper, s.network.App.GetStakingKeeper(),
+					s.network.App.GetBankKeeper(), mockEVMKeeper, s.network.App.GetStakingKeeperSDK(),
 					&transferKeeper,
 				)
 				s.network.App.SetErc20Keeper(erc20Keeper)

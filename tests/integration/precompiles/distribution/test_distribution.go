@@ -85,7 +85,7 @@ func (s *PrecompileTestSuite) TestRun() {
 			malleate: func() (common.Address, []byte) {
 				valAddr, err := sdk.ValAddressFromBech32(s.network.GetValidators()[0].OperatorAddress)
 				s.Require().NoError(err)
-				val, _ := s.network.App.GetStakingKeeper().GetValidator(ctx, valAddr)
+				val, _ := s.network.App.GetStakingKeeperSDK().GetValidator(ctx, valAddr)
 				coins := sdk.NewCoins(sdk.NewCoin(constants.ExampleAttoDenom, math.NewInt(1e18)))
 				s.Require().NoError(s.network.App.GetDistrKeeper().AllocateTokensToValidator(ctx, val, sdk.NewDecCoinsFromCoins(coins...)))
 
@@ -311,7 +311,7 @@ func (s *PrecompileTestSuite) TestCMS() {
 			malleate: func() (common.Address, []byte) {
 				valAddr, err := sdk.ValAddressFromBech32(s.network.GetValidators()[0].OperatorAddress)
 				s.Require().NoError(err)
-				val, _ := s.network.App.GetStakingKeeper().GetValidator(ctx, valAddr)
+				val, _ := s.network.App.GetStakingKeeperSDK().GetValidator(ctx, valAddr)
 				coins := sdk.NewCoins(sdk.NewCoin(constants.ExampleAttoDenom, math.NewInt(1e18)))
 				s.Require().NoError(s.network.App.GetDistrKeeper().AllocateTokensToValidator(ctx, val, sdk.NewDecCoinsFromCoins(coins...)))
 

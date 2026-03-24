@@ -31,7 +31,6 @@ import (
 	txtypes "github.com/cosmos/cosmos-sdk/types/tx"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
-	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
@@ -167,7 +166,7 @@ func (n *IntegrationNetwork) configureAndInitChain(evmApp evm.EvmApp) error {
 
 	// Get the corresponding slashing info and missed block info
 	// for the created validators
-	slashingParams, err := getValidatorsSlashingGen(validators, evmApp.GetStakingKeeper().(slashingtypes.StakingKeeper))
+	slashingParams, err := getValidatorsSlashingGen(validators, evmApp.GetStakingKeeperSDK())
 	if err != nil {
 		return err
 	}

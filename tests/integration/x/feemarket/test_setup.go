@@ -50,7 +50,7 @@ func (s *KeeperTestSuite) SetupTest() {
 	txFactory := factory.New(nw, grpcHandler)
 
 	ctx := nw.GetContext()
-	sk := nw.App.GetStakingKeeper()
+	sk := nw.App.GetStakingKeeperSDK()
 	bondDenom, err := sk.BondDenom(ctx)
 	if err != nil {
 		panic(err)

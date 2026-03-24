@@ -206,7 +206,7 @@ func (s *PrecompileTestSuite) TestUnbondingDelegation() {
 
 			valAddr, err := sdk.ValAddressFromBech32(s.network.GetValidators()[0].GetOperator())
 			s.Require().NoError(err)
-			_, _, err = s.network.App.GetStakingKeeper().Undelegate(s.network.GetContext(), s.keyring.GetAddr(0).Bytes(), valAddr, math.LegacyNewDec(1))
+			_, _, err = s.network.App.GetStakingKeeperSDK().Undelegate(s.network.GetContext(), s.keyring.GetAddr(0).Bytes(), valAddr, math.LegacyNewDec(1))
 			s.Require().NoError(err)
 
 			bz, err := s.precompile.UnbondingDelegation(s.network.GetContext(), contract, &method, tc.malleate(s.network.GetValidators()[0].OperatorAddress))

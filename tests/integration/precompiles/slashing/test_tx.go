@@ -84,7 +84,7 @@ func (s *PrecompileTestSuite) TestUnjail() {
 		{
 			"success - validator unjailed",
 			func() []interface{} {
-				validator, err := s.network.App.GetStakingKeeper().GetValidator(s.network.GetContext(), sdk.ValAddress(s.keyring.GetAccAddr(0)))
+				validator, err := s.network.App.GetStakingKeeperSDK().GetValidator(s.network.GetContext(), sdk.ValAddress(s.keyring.GetAccAddr(0)))
 				s.Require().NoError(err)
 
 				valConsAddr, err := validator.GetConsAddr()
@@ -95,7 +95,7 @@ func (s *PrecompileTestSuite) TestUnjail() {
 				)
 				s.Require().NoError(err)
 
-				validatorAfterJail, err := s.network.App.GetStakingKeeper().GetValidator(s.network.GetContext(), sdk.ValAddress(s.keyring.GetAddr(0).Bytes()))
+				validatorAfterJail, err := s.network.App.GetStakingKeeperSDK().GetValidator(s.network.GetContext(), sdk.ValAddress(s.keyring.GetAddr(0).Bytes()))
 				s.Require().NoError(err)
 				s.Require().True(validatorAfterJail.IsJailed())
 
@@ -104,7 +104,7 @@ func (s *PrecompileTestSuite) TestUnjail() {
 				}
 			},
 			func() {
-				validatorAfterUnjail, err := s.network.App.GetStakingKeeper().GetValidator(s.network.GetContext(), sdk.ValAddress(s.keyring.GetAddr(0).Bytes()))
+				validatorAfterUnjail, err := s.network.App.GetStakingKeeperSDK().GetValidator(s.network.GetContext(), sdk.ValAddress(s.keyring.GetAddr(0).Bytes()))
 				s.Require().NoError(err)
 				s.Require().False(validatorAfterUnjail.IsJailed())
 			},

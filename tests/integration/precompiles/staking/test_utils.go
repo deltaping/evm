@@ -123,7 +123,7 @@ func (s *PrecompileTestSuite) setupRedelegations(ctx sdk.Context, redelAmt *big.
 		Amount:              sdk.NewCoin(s.bondDenom, math.NewIntFromBigInt(redelAmt)),
 	}
 
-	msgSrv := stakingkeeper.NewMsgServerImpl(s.network.App.GetStakingKeeper())
+	msgSrv := stakingkeeper.NewMsgServerImpl(s.network.App.GetStakingKeeperSDK())
 	// create 2 entries for same redelegation
 	for i := 0; i < 2; i++ {
 		if _, err := msgSrv.BeginRedelegate(ctx, &msg); err != nil {

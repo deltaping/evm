@@ -299,7 +299,7 @@ func (s *PrecompileTestSuite) TestCreateValidator() {
 				s.Require().Equal(value, createValidatorEvent.Value)
 
 				// check the validator state
-				validator, err := s.network.App.GetStakingKeeper().GetValidator(s.network.GetContext(), validatorAddress.Bytes())
+				validator, err := s.network.App.GetStakingKeeperSDK().GetValidator(s.network.GetContext(), validatorAddress.Bytes())
 				s.Require().NoError(err)
 				s.Require().NotNil(validator, "expected validator not to be nil")
 				expRate := math.LegacyNewDecFromBigIntWithPrec(commission.Rate, math.LegacyPrecision)
@@ -341,7 +341,7 @@ func (s *PrecompileTestSuite) TestCreateValidator() {
 			} else {
 				s.Require().NoError(err)
 				// query the validator in the staking keeper
-				validator, err := s.network.App.GetStakingKeeper().Validator(ctx, validator.AccAddr.Bytes())
+				validator, err := s.network.App.GetStakingKeeperSDK().Validator(ctx, validator.AccAddr.Bytes())
 				s.Require().NoError(err)
 
 				s.Require().NotNil(validator, "expected validator not to be nil")
@@ -717,7 +717,7 @@ func (s *PrecompileTestSuite) TestEditValidator() {
 				s.Require().NoError(err)
 
 				// query the validator in the staking keeper
-				validator, err := s.network.App.GetStakingKeeper().Validator(ctx, valAddr.Bytes())
+				validator, err := s.network.App.GetStakingKeeperSDK().Validator(ctx, valAddr.Bytes())
 				s.Require().NoError(err)
 
 				s.Require().NotNil(validator, "expected validator not to be nil")
@@ -880,7 +880,7 @@ func (s *PrecompileTestSuite) TestDelegate() {
 			// query the delegation in the staking keeper
 			valAddr, valErr := sdk.ValAddressFromBech32(s.network.GetValidators()[0].OperatorAddress)
 			s.Require().NoError(valErr)
-			delegation, delErr := s.network.App.GetStakingKeeper().Delegation(ctx, delegator.AccAddr, valAddr)
+			delegation, delErr := s.network.App.GetStakingKeeperSDK().Delegation(ctx, delegator.AccAddr, valAddr)
 			s.Require().NoError(delErr)
 			if tc.expError {
 				s.Require().ErrorContains(err, tc.errContains)
@@ -986,7 +986,7 @@ func (s *PrecompileTestSuite) TestUndelegate() {
 				s.Require().Len(args, 1)
 				completionTime, ok := args[0].(int64)
 				s.Require().True(ok, "completion time type %T", args[0])
-				params, err := s.network.App.GetStakingKeeper().GetParams(ctx)
+				params, err := s.network.App.GetStakingKeeperSDK().GetParams(ctx)
 				s.Require().NoError(err)
 				expCompletionTime := ctx.BlockTime().Add(params.UnbondingTime).UTC().Unix()
 				s.Require().Equal(expCompletionTime, completionTime)
@@ -1016,7 +1016,7 @@ func (s *PrecompileTestSuite) TestUndelegate() {
 			bz, err := s.precompile.Undelegate(ctx, contract, stDB, &method, undelegateArgs)
 
 			// query the unbonding delegations in the staking keeper
-			undelegations, _ := s.network.App.GetStakingKeeper().GetAllUnbondingDelegations(ctx, delegator.AccAddr)
+			undelegations, _ := s.network.App.GetStakingKeeperSDK().GetAllUnbondingDelegations(ctx, delegator.AccAddr)
 
 			if tc.expError {
 				s.Require().ErrorContains(err, tc.errContains)
@@ -1137,7 +1137,7 @@ func (s *PrecompileTestSuite) TestRedelegate() {
 				s.Require().Len(args, 1)
 				completionTime, ok := args[0].(int64)
 				s.Require().True(ok, "completion time type %T", args[0])
-				params, err := s.network.App.GetStakingKeeper().GetParams(ctx)
+				params, err := s.network.App.GetStakingKeeperSDK().GetParams(ctx)
 				s.Require().NoError(err)
 				expCompletionTime := ctx.BlockTime().Add(params.UnbondingTime).UTC().Unix()
 				s.Require().Equal(expCompletionTime, completionTime)
@@ -1165,7 +1165,7 @@ func (s *PrecompileTestSuite) TestRedelegate() {
 			bz, err := s.precompile.Redelegate(ctx, contract, s.network.GetStateDB(), &method, redelegateArgs)
 
 			// query the redelegations in the staking keeper
-			redelegations, redelErr := s.network.App.GetStakingKeeper().GetRedelegations(ctx, delegator.AccAddr, 5)
+			redelegations, redelErr := s.network.App.GetStakingKeeperSDK().GetRedelegations(ctx, delegator.AccAddr, 5)
 			s.Require().NoError(redelErr)
 
 			if tc.expError {
@@ -1339,7 +1339,7 @@ func (s *PrecompileTestSuite) TestCancelUnbondingDelegation() {
 				valAddr, err := sdk.ValAddressFromBech32(s.network.GetValidators()[0].GetOperator())
 				s.Require().NoError(err)
 
-				_, err = s.network.App.GetStakingKeeper().GetDelegation(ctx, delegator.AccAddr, valAddr)
+				_, err = s.network.App.GetStakingKeeperSDK().GetDelegation(ctx, delegator.AccAddr, valAddr)
 				s.Require().Error(err)
 				s.Require().Contains("no delegation for (address, validator) tuple", err.Error())
 
@@ -1347,7 +1347,7 @@ func (s *PrecompileTestSuite) TestCancelUnbondingDelegation() {
 				s.Require().NoError(err)
 				tc.postCheck(bz)
 
-				delegation, err := s.network.App.GetStakingKeeper().GetDelegation(ctx, delegator.AccAddr, valAddr)
+				delegation, err := s.network.App.GetStakingKeeperSDK().GetDelegation(ctx, delegator.AccAddr, valAddr)
 				s.Require().NoError(err)
 
 				s.Require().Equal(delegation.DelegatorAddress, delegator.AccAddr.String())

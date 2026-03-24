@@ -482,7 +482,7 @@ func (s *KeeperTestSuite) TestQueryValidatorAccount() {
 					ConsAddress: sdk.ConsAddress(consAddr).String(),
 				}
 
-				addrBz, err := s.Network.App.GetStakingKeeper().ValidatorAddressCodec().StringToBytes(val.OperatorAddress)
+				addrBz, err := s.Network.App.GetStakingKeeperSDK().ValidatorAddressCodec().StringToBytes(val.OperatorAddress)
 				s.Require().NoError(err)
 
 				resp := &types.QueryValidatorAccountResponse{
@@ -506,7 +506,7 @@ func (s *KeeperTestSuite) TestQueryValidatorAccount() {
 				accNumber := uint64(100)
 				accSeq := uint64(10)
 
-				addrBz, err := s.Network.App.GetStakingKeeper().ValidatorAddressCodec().StringToBytes(val.OperatorAddress)
+				addrBz, err := s.Network.App.GetStakingKeeperSDK().ValidatorAddressCodec().StringToBytes(val.OperatorAddress)
 				s.Require().NoError(err)
 
 				accAddrStr := sdk.AccAddress(addrBz).String()

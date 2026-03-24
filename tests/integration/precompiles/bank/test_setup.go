@@ -57,7 +57,7 @@ func (s *PrecompileTestSuite) SetupTest() sdk.Context {
 	txFactory := factory.New(unitNetwork, grpcHandler)
 
 	ctx := unitNetwork.GetContext()
-	sk := unitNetwork.App.GetStakingKeeper()
+	sk := unitNetwork.App.GetStakingKeeperSDK()
 	bondDenom, err := sk.BondDenom(ctx)
 	s.Require().NoError(err, "failed to get bond denom")
 	s.Require().NotEmpty(bondDenom, "bond denom cannot be empty")
