@@ -32,49 +32,6 @@ func GetTransferAmount(packet channeltypes.Packet) (string, error) {
 	return data.Amount, nil
 }
 
-// GetReceivedCoin returns the transferred coin from an ICS20 FungibleTokenPacketData
-// as seen from the destination chain.
-// If the receiving chain is the source chain of the tokens, it removes the prefix
-// path added by source (i.e sender) chain to the denom. Otherwise, it adds the
-// prefix path from the destination chain to the denom.
-func GetReceivedCoin(packet channeltypes.Packet, token transfertypes.Token) sdk.Coin {
-	// NOTE: Denom and amount are already validated
-	amountInt, _ := math.NewIntFromString(token.Amount)
-
-	if token.Denom.HasPrefix(packet.SourcePort, packet.SourceChannel) {
-		token.Denom.Trace = token.Denom.Trace[1:]
-
-		// coin denomination used in sending from the escrow address
-		// The denomination used to send the coins is either the native denom or the hash of the path
-		// if the denomination is not native.
-		return sdk.Coin{
-			Denom:  token.Denom.IBCDenom(),
-			Amount: amountInt,
-		}
-	}
-
-	// since SendPacket did not prefix the denomination, we must prefix denomination here
-	hop := []transfertypes.Hop{transfertypes.NewHop(packet.DestinationPort, packet.DestinationChannel)}
-	token.Denom.Trace = append(hop, token.Denom.Trace...)
-
-	return sdk.Coin{
-		Denom:  token.Denom.IBCDenom(),
-		Amount: amountInt,
-	}
-}
-
-// GetSentCoin returns the sent coin from an ICS20 FungibleTokenPacketData.
-func GetSentCoin(rawDenom, rawAmt string) sdk.Coin {
-	// NOTE: Denom and amount are already validated
-	amount, _ := math.NewIntFromString(rawAmt)
-	denom := transfertypes.ExtractDenomFromPath(rawDenom)
-
-	return sdk.Coin{
-		Denom:  denom.IBCDenom(),
-		Amount: amount,
-	}
-}
-
 // GetDenom returns the denomination from the corresponding IBC denomination. If the
 // denomination is not an IBC voucher or the trace is not found, it returns an error.
 func GetDenom(

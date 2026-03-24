@@ -7,9 +7,6 @@ import (
 
 	erc20types "github.com/cosmos/evm/x/erc20/types"
 	"github.com/cosmos/evm/x/vm/statedb"
-	ibctypes "github.com/cosmos/ibc-go/v10/modules/apps/transfer/types"
-	connectiontypes "github.com/cosmos/ibc-go/v10/modules/core/03-connection/types"
-	channeltypes "github.com/cosmos/ibc-go/v10/modules/core/04-channel/types"
 
 	"cosmossdk.io/math"
 
@@ -29,18 +26,6 @@ type BankKeeper interface {
 	SendCoins(ctx context.Context, fromAddr sdk.AccAddress, toAddr sdk.AccAddress, amt sdk.Coins) error
 	SpendableCoin(ctx context.Context, addr sdk.AccAddress, denom string) sdk.Coin
 	BlockedAddr(addr sdk.AccAddress) bool
-}
-
-type TransferKeeper interface {
-	Denom(ctx context.Context, req *ibctypes.QueryDenomRequest) (*ibctypes.QueryDenomResponse, error)
-	Denoms(ctx context.Context, req *ibctypes.QueryDenomsRequest) (*ibctypes.QueryDenomsResponse, error)
-	DenomHash(ctx context.Context, req *ibctypes.QueryDenomHashRequest) (*ibctypes.QueryDenomHashResponse, error)
-	Transfer(ctx context.Context, msg *ibctypes.MsgTransfer) (*ibctypes.MsgTransferResponse, error)
-}
-
-type ChannelKeeper interface {
-	GetChannel(ctx sdk.Context, portID, channelID string) (channeltypes.Channel, bool)
-	GetConnection(ctx sdk.Context, connectionID string) (connectiontypes.ConnectionEnd, error)
 }
 
 type DistributionKeeper interface {

@@ -11,9 +11,6 @@ import (
 
 	"github.com/cosmos/evm/x/vm/statedb"
 	evmtypes "github.com/cosmos/evm/x/vm/types"
-	transfertypes "github.com/cosmos/ibc-go/v10/modules/apps/transfer/types"
-	channeltypes "github.com/cosmos/ibc-go/v10/modules/core/04-channel/types"
-	"github.com/cosmos/ibc-go/v10/modules/core/exported"
 
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/log"
@@ -62,9 +59,6 @@ type EVMKeeper interface {
 }
 
 type Erc20Keeper interface {
-	OnRecvPacket(ctx sdk.Context, packet channeltypes.Packet, ack exported.Acknowledgement) exported.Acknowledgement
-	OnAcknowledgementPacket(ctx sdk.Context, packet channeltypes.Packet, data transfertypes.FungibleTokenPacketData, ack channeltypes.Acknowledgement) error
-	OnTimeoutPacket(ctx sdk.Context, packet channeltypes.Packet, data transfertypes.FungibleTokenPacketData) error
 	Logger(ctx sdk.Context) log.Logger
 }
 
