@@ -18,8 +18,7 @@ import (
 	erc20types "github.com/cosmos/evm/x/erc20/types"
 	"github.com/cosmos/evm/x/vm/statedb"
 	"github.com/cosmos/evm/x/vm/types"
-	ibctesting "github.com/cosmos/ibc-go/v8/testing"
-
+	sdkmath "cosmossdk.io/math"
 	errorsmod "cosmossdk.io/errors"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -80,7 +79,7 @@ func SetupNativeErc20(t *testing.T, chain *evmibctesting.TestChain, senderAcc ev
 	// Mint tokens to default sender
 	contractAbi := contracts.ERC20MinterBurnerDecimalsContract.ABI
 	nativeDenom := erc20types.CreateDenom(contractAddr.String())
-	sendAmt := ibctesting.DefaultCoinAmount
+	sendAmt := sdkmath.NewInt(100) // default test coin amount
 	senderAddr := senderAcc.SenderAccount.GetAddress()
 
 	stateDB = statedb.New(evmCtx, evmApp.GetEVMKeeper(), statedb.NewEmptyTxConfig())
