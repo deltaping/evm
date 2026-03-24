@@ -5,7 +5,6 @@ import (
 
 	erc20keeper "github.com/cosmos/evm/x/erc20/keeper"
 	feemarketkeeper "github.com/cosmos/evm/x/feemarket/keeper"
-	"github.com/cosmos/evm/x/ibc/callbacks/keeper"
 	precisebankkeeper "github.com/cosmos/evm/x/precisebank/keeper"
 	evmkeeper "github.com/cosmos/evm/x/vm/keeper"
 	transferkeeper "github.com/cosmos/ibc-go/v10/modules/apps/transfer/keeper"
@@ -53,7 +52,6 @@ type EvmApp interface { //nolint:revive
 	GetPreciseBankKeeper() *precisebankkeeper.Keeper
 	GetFeeGrantKeeper() feegrantkeeper.Keeper
 	GetConsensusParamsKeeper() consensusparamkeeper.Keeper
-	GetCallbackKeeper() keeper.ContractKeeper
 	GetTransferKeeper() transferkeeper.Keeper
 	SetTransferKeeper(transferKeeper transferkeeper.Keeper)
 	DefaultGenesis() map[string]json.RawMessage

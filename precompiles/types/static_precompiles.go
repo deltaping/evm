@@ -12,13 +12,10 @@ import (
 	cmn "github.com/cosmos/evm/precompiles/common"
 	distprecompile "github.com/cosmos/evm/precompiles/distribution"
 	govprecompile "github.com/cosmos/evm/precompiles/gov"
-	ics20precompile "github.com/cosmos/evm/precompiles/ics20"
 	"github.com/cosmos/evm/precompiles/p256"
 	slashingprecompile "github.com/cosmos/evm/precompiles/slashing"
 	stakingprecompile "github.com/cosmos/evm/precompiles/staking"
 	erc20Keeper "github.com/cosmos/evm/x/erc20/keeper"
-	transferkeeper "github.com/cosmos/ibc-go/v10/modules/apps/transfer/keeper"
-	channelkeeper "github.com/cosmos/ibc-go/v10/modules/core/04-channel/keeper"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	distributionkeeper "github.com/cosmos/cosmos-sdk/x/distribution/keeper"
@@ -96,25 +93,6 @@ func (s StaticPrecompiles) WithDistributionPrecompile(
 	)
 
 	s[distributionPrecompile.Address()] = distributionPrecompile
-	return s
-}
-
-func (s StaticPrecompiles) WithICS20Precompile(
-	bankKeeper cmn.BankKeeper,
-	stakingKeeper stakingkeeper.Keeper,
-	transferKeeper *transferkeeper.Keeper,
-	channelKeeper *channelkeeper.Keeper,
-	erc20Keeper *erc20Keeper.Keeper,
-) StaticPrecompiles {
-	ibcTransferPrecompile := ics20precompile.NewPrecompile(
-		bankKeeper,
-		stakingKeeper,
-		transferKeeper,
-		channelKeeper,
-		erc20Keeper,
-	)
-
-	s[ibcTransferPrecompile.Address()] = ibcTransferPrecompile
 	return s
 }
 

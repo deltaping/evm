@@ -14,7 +14,6 @@ import (
 	connectiontypes "github.com/cosmos/ibc-go/v10/modules/core/03-connection/types"
 	channeltypes "github.com/cosmos/ibc-go/v10/modules/core/04-channel/types"
 	commitmenttypes "github.com/cosmos/ibc-go/v10/modules/core/23-commitment/types"
-	commitmenttypesv2 "github.com/cosmos/ibc-go/v10/modules/core/23-commitment/types/v2"
 	host "github.com/cosmos/ibc-go/v10/modules/core/24-host"
 	"github.com/cosmos/ibc-go/v10/modules/core/exported"
 	ibctm "github.com/cosmos/ibc-go/v10/modules/light-clients/07-tendermint"
@@ -37,7 +36,6 @@ type Endpoint struct {
 	ConnectionConfig *ConnectionConfig
 	ChannelConfig    *ChannelConfig
 
-	MerklePathPrefix commitmenttypesv2.MerklePath
 	// disableUniqueChannelIDs is used to enforce, in a test,
 	// the old way to generate channel IDs (all channels are called channel-0)
 	// It is used only by one test suite and should not be used for new tests.
@@ -55,7 +53,6 @@ func NewEndpoint(
 		ClientConfig:     clientConfig,
 		ConnectionConfig: connectionConfig,
 		ChannelConfig:    channelConfig,
-		MerklePathPrefix: MerklePath,
 	}
 }
 
@@ -67,7 +64,6 @@ func NewDefaultEndpoint(chain *TestChain) *Endpoint {
 		ClientConfig:     NewTendermintConfig(),
 		ConnectionConfig: NewConnectionConfig(),
 		ChannelConfig:    NewChannelConfig(),
-		MerklePathPrefix: MerklePath,
 	}
 }
 

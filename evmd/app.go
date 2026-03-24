@@ -31,12 +31,9 @@ import (
 	"github.com/cosmos/evm/x/erc20"
 	erc20keeper "github.com/cosmos/evm/x/erc20/keeper"
 	erc20types "github.com/cosmos/evm/x/erc20/types"
-	erc20v2 "github.com/cosmos/evm/x/erc20/v2"
 	"github.com/cosmos/evm/x/feemarket"
 	feemarketkeeper "github.com/cosmos/evm/x/feemarket/keeper"
 	feemarkettypes "github.com/cosmos/evm/x/feemarket/types"
-	ibccallbackskeeper "github.com/cosmos/evm/x/ibc/callbacks/keeper"
-
 	"github.com/cosmos/evm/x/precisebank"
 	precisebankkeeper "github.com/cosmos/evm/x/precisebank/keeper"
 	precisebanktypes "github.com/cosmos/evm/x/precisebank/types"
@@ -44,14 +41,11 @@ import (
 	evmkeeper "github.com/cosmos/evm/x/vm/keeper"
 	evmtypes "github.com/cosmos/evm/x/vm/types"
 	"github.com/cosmos/gogoproto/proto"
-	ibccallbacks "github.com/cosmos/ibc-go/v10/modules/apps/callbacks"
 	transfer "github.com/cosmos/ibc-go/v10/modules/apps/transfer"
 	transferkeeper "github.com/cosmos/ibc-go/v10/modules/apps/transfer/keeper"
 	ibctransfertypes "github.com/cosmos/ibc-go/v10/modules/apps/transfer/types"
-	transferv2 "github.com/cosmos/ibc-go/v10/modules/apps/transfer/v2"
 	ibc "github.com/cosmos/ibc-go/v10/modules/core"
 	porttypes "github.com/cosmos/ibc-go/v10/modules/core/05-port/types"
-	ibcapi "github.com/cosmos/ibc-go/v10/modules/core/api"
 	ibcexported "github.com/cosmos/ibc-go/v10/modules/core/exported"
 	ibckeeper "github.com/cosmos/ibc-go/v10/modules/core/keeper"
 	ibctm "github.com/cosmos/ibc-go/v10/modules/light-clients/07-tendermint"
@@ -183,7 +177,6 @@ type EVMD struct {
 	// IBC keepers
 	IBCKeeper      *ibckeeper.Keeper // IBC Keeper must be a pointer in the app, so we can SetRouter on it correctly
 	TransferKeeper transferkeeper.Keeper
-	CallbackKeeper ibccallbackskeeper.ContractKeeper
 
 	// Cosmos EVM keepers
 	FeeMarketKeeper   feemarketkeeper.Keeper
@@ -459,8 +452,6 @@ func NewExampleApp(
 			app.DistrKeeper,
 			app.PreciseBankKeeper,
 			&app.Erc20Keeper,
-			&app.TransferKeeper,
-			app.IBCKeeper.ChannelKeeper,
 			app.GovKeeper,
 			app.SlashingKeeper,
 			appCodec,
@@ -492,46 +483,15 @@ func NewExampleApp(
 	)
 	app.TransferKeeper.SetAddressCodec(evmaddress.NewEvmCodec(sdk.GetConfig().GetBech32AccountAddrPrefix()))
 
-	/*
-		Create Transfer Stack
-
-		transfer stack contains (from bottom to top):
-			- IBC Callbacks Middleware (with EVM ContractKeeper)
-			- ERC-20 Middleware
-			- IBC Transfer
-
-		SendPacket, since it is originating from the application to core IBC:
-		 	transferKeeper.SendPacket ->  erc20.SendPacket -> callbacks.SendPacket -> channel.SendPacket
-
-		RecvPacket, message that originates from core IBC and goes down to app, the flow is the other way
-			channel.RecvPacket -> callbacks.OnRecvPacket -> erc20.OnRecvPacket -> transfer.OnRecvPacket
-	*/
-
-	// create IBC module from top to bottom of stack
+	// Create standard IBC transfer stack (no EVM-specific middleware)
 	var transferStack porttypes.IBCModule
-
 	transferStack = transfer.NewIBCModule(app.TransferKeeper)
-	maxCallbackGas := uint64(1_000_000)
-	transferStack = erc20.NewIBCMiddleware(app.Erc20Keeper, transferStack)
-	app.CallbackKeeper = ibccallbackskeeper.NewKeeper(
-		app.AccountKeeper,
-		app.EVMKeeper,
-		app.Erc20Keeper,
-	)
-	transferStack = ibccallbacks.NewIBCMiddleware(transferStack, app.IBCKeeper.ChannelKeeper, app.CallbackKeeper, maxCallbackGas)
-
-	var transferStackV2 ibcapi.IBCModule
-	transferStackV2 = transferv2.NewIBCModule(app.TransferKeeper)
-	transferStackV2 = erc20v2.NewIBCMiddleware(transferStackV2, app.Erc20Keeper)
 
 	// Create static IBC router, add transfer route, then set and seal it
 	ibcRouter := porttypes.NewRouter()
 	ibcRouter.AddRoute(ibctransfertypes.ModuleName, transferStack)
-	ibcRouterV2 := ibcapi.NewRouter()
-	ibcRouterV2.AddRoute(ibctransfertypes.ModuleName, transferStackV2)
 
 	app.IBCKeeper.SetRouter(ibcRouter)
-	app.IBCKeeper.SetRouterV2(ibcRouterV2)
 
 	clientKeeper := app.IBCKeeper.ClientKeeper
 	storeProvider := app.IBCKeeper.ClientKeeper.GetStoreProvider()
@@ -1045,10 +1005,6 @@ func (app *EVMD) GetMintKeeper() mintkeeper.Keeper {
 
 func (app *EVMD) GetPreciseBankKeeper() *precisebankkeeper.Keeper {
 	return &app.PreciseBankKeeper
-}
-
-func (app *EVMD) GetCallbackKeeper() ibccallbackskeeper.ContractKeeper {
-	return app.CallbackKeeper
 }
 
 func (app *EVMD) GetTransferKeeper() transferkeeper.Keeper {
