@@ -72,5 +72,5 @@ type EvmApp interface { //nolint:revive
 	GetKey(storeKey string) *storetypes.KVStoreKey
 	GetAnteHandler() sdk.AnteHandler
 	MsgServiceRouter() *baseapp.MsgServiceRouter
-	GetMempool() mempool.ExtMempool
+	GetMempool() mempool.Mempool
 }

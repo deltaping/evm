@@ -1043,7 +1043,7 @@ func (app *EVMD) SetTransferKeeper(transferKeeper transferkeeper.Keeper) {
 	app.TransferKeeper = transferKeeper
 }
 
-func (app *EVMD) GetMempool() sdkmempool.ExtMempool {
+func (app *EVMD) GetMempool() sdkmempool.Mempool {
 	return app.EVMMempool
 }
 

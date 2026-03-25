@@ -8,6 +8,7 @@ import (
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/stretchr/testify/require"
 
+	evmmempool "github.com/cosmos/evm/mempool"
 	"github.com/cosmos/evm/testutil/integration/evm/network"
 	"github.com/cosmos/evm/testutil/keyring"
 	evmtypes "github.com/cosmos/evm/x/vm/types"
@@ -935,7 +936,9 @@ func (s *IntegrationTestSuite) TestSelectBy() {
 			}
 
 			// Test SelectBy directly
-			mpool.SelectBy(s.network.GetContext(), nil, wrappedFilter)
+			evmMpool, ok := mpool.(*evmmempool.ExperimentalEVMMempool)
+			s.Require().True(ok, "mempool should be *ExperimentalEVMMempool")
+			evmMpool.SelectBy(s.network.GetContext(), nil, wrappedFilter)
 
 			// Assert that SelectBy completed without hanging
 			if tc.expectedCalls > 0 {
