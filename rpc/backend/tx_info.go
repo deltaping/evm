@@ -296,7 +296,12 @@ func (b *Backend) GetTransactionByBlockNumberAndIndex(blockNum rpctypes.BlockNum
 // https://github.com/cometbft/cometbft/issues/6539
 func (b *Backend) GetTxByEthHash(hash common.Hash) (*servertypes.TxResult, error) {
 	if b.Indexer != nil {
-		return b.Indexer.GetByTxHash(hash)
+		res, err := b.Indexer.GetByTxHash(hash)
+		if err == nil {
+			return res, nil
+		}
+		// Indexer didn't find the tx (e.g., not yet indexed asynchronously).
+		// Fall through to CometBFT tx indexer.
 	}
 
 	// fallback to CometBFT tx indexer
@@ -314,7 +319,12 @@ func (b *Backend) GetTxByEthHash(hash common.Hash) (*servertypes.TxResult, error
 func (b *Backend) GetTxByTxIndex(height int64, index uint) (*servertypes.TxResult, error) {
 	int32Index := int32(index) //#nosec G115 -- checked for int overflow already
 	if b.Indexer != nil {
-		return b.Indexer.GetByBlockAndIndex(height, int32Index)
+		res, err := b.Indexer.GetByBlockAndIndex(height, int32Index)
+		if err == nil {
+			return res, nil
+		}
+		// Indexer didn't find the tx (e.g., not yet indexed asynchronously).
+		// Fall through to CometBFT tx indexer.
 	}
 
 	// fallback to CometBFT tx indexer
