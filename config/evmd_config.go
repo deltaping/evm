@@ -2,7 +2,10 @@ package config
 
 import (
 	"maps"
+	"os"
+	"path/filepath"
 	"sort"
+	"strings"
 
 	corevm "github.com/ethereum/go-ethereum/core/vm"
 
@@ -14,8 +17,6 @@ import (
 	evmtypes "github.com/cosmos/evm/x/vm/types"
 	ibctransfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
 
-	clienthelpers "cosmossdk.io/client/v2/helpers"
-
 	serverconfig "github.com/cosmos/cosmos-sdk/server/config"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
@@ -24,8 +25,29 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
+// getNodeHomeDirectory returns the home directory for the node.
+// It checks --home flag, NODE_HOME env var, then falls back to ~/name.
+func getNodeHomeDirectory(name string) (string, error) {
+	args := os.Args
+	for i := 0; i < len(args); i++ {
+		if args[i] == "--home" && i+1 < len(args) {
+			return filepath.Clean(args[i+1]), nil
+		} else if strings.HasPrefix(args[i], "--home=") {
+			return filepath.Clean(args[i][7:]), nil
+		}
+	}
+	if homeDir := os.Getenv("NODE_HOME"); homeDir != "" {
+		return filepath.Clean(homeDir), nil
+	}
+	userHomeDir, err := os.UserHomeDir()
+	if err != nil {
+		return "", err
+	}
+	return filepath.Join(userHomeDir, name), nil
+}
+
 func MustGetDefaultNodeHome() string {
-	defaultNodeHome, err := clienthelpers.GetNodeHomeDirectory(".evmd")
+	defaultNodeHome, err := getNodeHomeDirectory(".evmd")
 	if err != nil {
 		panic(err)
 	}

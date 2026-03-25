@@ -60,7 +60,7 @@ type DBOpener func(opts types.AppOptions, rootDir string, backend dbm.BackendTyp
 type Application interface {
 	types.Application
 	AppWithPendingTxStream
-	GetMempool() sdkmempool.ExtMempool
+	GetMempool() sdkmempool.Mempool
 	SetClientCtx(clientCtx client.Context)
 }
 

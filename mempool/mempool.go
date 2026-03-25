@@ -26,7 +26,7 @@ import (
 	sdkmempool "github.com/cosmos/cosmos-sdk/types/mempool"
 )
 
-var _ sdkmempool.ExtMempool = &ExperimentalEVMMempool{}
+var _ sdkmempool.Mempool = &ExperimentalEVMMempool{}
 
 const (
 	// SubscriberName is the name of the event bus subscriber for the EVM mempool
@@ -47,7 +47,7 @@ type (
 		/** Mempools **/
 		txPool       *txpool.TxPool
 		legacyTxPool *legacypool.LegacyPool
-		cosmosPool   sdkmempool.ExtMempool
+		cosmosPool   sdkmempool.Mempool
 
 		/** Utils **/
 		logger        log.Logger
@@ -93,7 +93,7 @@ func NewExperimentalEVMMempool(
 	cosmosPoolMaxTx int,
 ) *ExperimentalEVMMempool {
 	var (
-		cosmosPool sdkmempool.ExtMempool
+		cosmosPool sdkmempool.Mempool
 		blockchain *Blockchain
 	)
 
