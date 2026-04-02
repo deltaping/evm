@@ -98,7 +98,7 @@ func TestRevertToSnapshot_ProcessedEventsInvariant(t *testing.T) {
 			// Revert to the target snapshot
 			stateDB.RevertToSnapshot(snapshots[tc.revertToIndex])
 
-			currentEventCount := len(cacheCtx.EventManager().Events())
+			currentEventCount := len(stateDB.cacheCtx.EventManager().Events())
 			require.Equal(t, tc.expectedEvents, currentEventCount, "event count mismatch after revert")
 
 			// Verify invariant: processedEventsCount <= current event count
