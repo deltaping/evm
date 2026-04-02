@@ -44,6 +44,14 @@ func (app *EVMD) configureEVMMempool(appOpts servertypes.AppOptions, logger log.
 	app.EVMMempool = evmMempool
 	app.SetMempool(evmMempool)
 
+	// Wrap CheckTx to handle EVM nonce-gap transactions.
+	// cosmos-sdk v0.50.x does not support SetCheckTxHandler, so we override
+	// the ABCI CheckTx method directly by setting a custom handler.
+	app.checkTxHandler = evmmempool.CheckTxWithNonceHandler(
+		app.BaseApp.CheckTx,
+		evmMempool,
+	)
+
 	abciProposalHandler := baseapp.NewDefaultProposalHandler(evmMempool, app)
 	app.SetPrepareProposal(abciProposalHandler.PrepareProposalHandler())
 

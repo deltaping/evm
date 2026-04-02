@@ -211,6 +211,11 @@ func (b *Blockchain) StateAt(hash common.Hash) (vm.StateDB, error) {
 		return nil, fmt.Errorf("failed to get latest context for StateAt: %w", err)
 	}
 
+	// Use a fresh EventManager to avoid a data race: the TxPool goroutine
+	// reads Events() here while the main goroutine may be emitting events
+	// on the shared context's EventManager concurrently.
+	ctx = ctx.WithEventManager(sdk.NewEventManager())
+
 	appHash := ctx.BlockHeader().AppHash
 	stateDB := statedb.New(ctx, b.vmKeeper, statedb.NewEmptyTxConfig())
 

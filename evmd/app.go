@@ -193,6 +193,7 @@ type EVMD struct {
 	Erc20Keeper       erc20keeper.Keeper
 	PreciseBankKeeper precisebankkeeper.Keeper
 	EVMMempool        *evmmempool.ExperimentalEVMMempool
+	checkTxHandler    func(*abci.RequestCheckTx) (*abci.ResponseCheckTx, error)
 
 	// the module manager
 	ModuleManager      *module.Manager
@@ -950,6 +951,16 @@ func (app *EVMD) RegisterNodeService(clientCtx client.Context, cfg config.Config
 // ---------------------------------------------
 // IBC Go TestingApp functions
 //
+
+// CheckTx overrides the BaseApp CheckTx to handle EVM nonce-gap transactions.
+// When the EVM mempool is configured with a custom CheckTx handler, it delegates
+// to that handler which routes nonce-gap EVM txs to the txpool for future execution.
+func (app *EVMD) CheckTx(req *abci.RequestCheckTx) (*abci.ResponseCheckTx, error) {
+	if app.checkTxHandler != nil {
+		return app.checkTxHandler(req)
+	}
+	return app.BaseApp.CheckTx(req)
+}
 
 // GetBaseApp implements the TestingApp interface.
 func (app *EVMD) GetBaseApp() *baseapp.BaseApp {
