@@ -7,9 +7,6 @@ import (
 	feemarketkeeper "github.com/cosmos/evm/x/feemarket/keeper"
 	precisebankkeeper "github.com/cosmos/evm/x/precisebank/keeper"
 	evmkeeper "github.com/cosmos/evm/x/vm/keeper"
-	ibckeeper "github.com/cosmos/ibc-go/v8/modules/core/keeper"
-	transferkeeper "github.com/cosmos/ibc-go/v8/modules/apps/transfer/keeper"
-	ibctestingtypes "github.com/cosmos/ibc-go/v8/testing/types"
 
 	storetypes "cosmossdk.io/store/types"
 	evidencekeeper "cosmossdk.io/x/evidence/keeper"
@@ -38,9 +35,7 @@ import (
 type EvmApp interface { //nolint:revive
 	servertypes.ABCI
 
-	// IBC testing app methods (from ibc-go/v8 TestingApp)
 	GetBaseApp() *baseapp.BaseApp
-	GetIBCKeeper() *ibckeeper.Keeper
 	GetTxConfig() client.TxConfig
 	AppCodec() codec.Codec
 	LastCommitID() storetypes.CommitID
@@ -60,14 +55,12 @@ type EvmApp interface { //nolint:revive
 	GetAccountKeeper() authkeeper.AccountKeeper
 	GetAuthzKeeper() authzkeeper.Keeper
 	GetDistrKeeper() distrkeeper.Keeper
-	GetStakingKeeper() ibctestingtypes.StakingKeeper
+	GetStakingKeeper() *stakingkeeper.Keeper
 	GetStakingKeeperSDK() *stakingkeeper.Keeper
 	GetMintKeeper() mintkeeper.Keeper
 	GetPreciseBankKeeper() *precisebankkeeper.Keeper
 	GetFeeGrantKeeper() feegrantkeeper.Keeper
 	GetConsensusParamsKeeper() consensusparamkeeper.Keeper
-	GetTransferKeeper() transferkeeper.Keeper
-	SetTransferKeeper(transferKeeper transferkeeper.Keeper)
 	DefaultGenesis() map[string]json.RawMessage
 	GetKey(storeKey string) *storetypes.KVStoreKey
 	GetAnteHandler() sdk.AnteHandler

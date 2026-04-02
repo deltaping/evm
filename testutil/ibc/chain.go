@@ -224,7 +224,7 @@ func NewTestChain(t *testing.T, isEVM bool, coord *Coordinator, chainID string) 
 		_, privVal := cmttypes.RandValidator(false, 100)
 		pubKey, err := privVal.GetPubKey()
 		require.NoError(t, err)
-		validators = append(validators, cmttypes.NewValidator(pubKey, 1))
+		validators = append(validators, cmttypes.NewValidator(pubKey, 1, false))
 		signersByAddress[pubKey.Address().String()] = privVal
 	}
 	// construct validator set;

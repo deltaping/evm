@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/cosmos/evm/config"
-	"github.com/cosmos/evm/testutil/integration/evm/network"
 	"github.com/cosmos/evm/x/vm/types"
 	"testing"
 
@@ -15,8 +14,6 @@ import (
 
 	dbm "github.com/cosmos/cosmos-db"
 	feemarkettypes "github.com/cosmos/evm/x/feemarket/types"
-	ibctesting "github.com/cosmos/ibc-go/v8/testing"
-
 	"cosmossdk.io/log"
 	"cosmossdk.io/math"
 
@@ -73,7 +70,7 @@ func Setup(t *testing.T, chainID string, evmChainID uint64) *EVMD {
 	require.NoError(t, err)
 
 	// create validator set with single validator
-	validator := cmttypes.NewValidator(pubKey, 1)
+	validator := cmttypes.NewValidator(pubKey, 1, false)
 	valSet := cmttypes.NewValidatorSet([]*cmttypes.Validator{validator})
 
 	// generate genesis account
@@ -101,7 +98,7 @@ func SetupWithGenesisValSet(t *testing.T, chainID string, evmChainID uint64, val
 	var bankGenesis banktypes.GenesisState
 	app.AppCodec().MustUnmarshalJSON(genesisState[banktypes.ModuleName], &bankGenesis)
 	require.NoError(t, err)
-	bankGenesis.DenomMetadata = network.GenerateBankGenesisMetadata(evmChainID)
+	bankGenesis.DenomMetadata = generateBankGenesisMetadata(evmChainID)
 	genesisState[banktypes.ModuleName] = app.AppCodec().MustMarshalJSON(&bankGenesis)
 	require.NoError(t, err)
 
@@ -127,11 +124,9 @@ func SetupWithGenesisValSet(t *testing.T, chainID string, evmChainID uint64, val
 	return app
 }
 
-// SetupTestingApp initializes the IBC-go testing application
-// need to keep this design to comply with the ibctesting SetupTestingApp func
-// and be able to set the chainID for the tests properly
-func SetupTestingApp(chainID string) func() (ibctesting.TestingApp, map[string]json.RawMessage) {
-	return func() (ibctesting.TestingApp, map[string]json.RawMessage) {
+// SetupTestingApp initializes the testing application
+func SetupTestingApp(chainID string) func() (*EVMD, map[string]json.RawMessage) {
+	return func() (*EVMD, map[string]json.RawMessage) {
 		db := dbm.NewMemDB()
 		app := NewExampleApp(
 			log.NewNopLogger(),
@@ -141,4 +136,48 @@ func SetupTestingApp(chainID string) func() (ibctesting.TestingApp, map[string]j
 		)
 		return app, app.DefaultGenesis()
 	}
+}
+
+// generateBankGenesisMetadata generates the metadata entries
+// for both extended and native EVM denominations depending on the chain.
+func generateBankGenesisMetadata(evmChainID uint64) []banktypes.Metadata {
+	denomConfig := config.ChainsCoinInfo[evmChainID]
+
+	displayDenom := denomConfig.DisplayDenom
+	evmDenom := denomConfig.Denom
+	extDenom := denomConfig.ExtendedDenom
+	evmDecimals := denomConfig.Decimals
+
+	name := "Cosmos EVM"
+	symbol := "ATOM"
+
+	var metas []banktypes.Metadata
+
+	if evmDenom != extDenom {
+		metas = append(metas, banktypes.Metadata{
+			Description: "Native EVM denom metadata",
+			Base:        evmDenom,
+			DenomUnits: []*banktypes.DenomUnit{
+				{Denom: evmDenom, Exponent: 0},
+				{Denom: displayDenom, Exponent: evmDecimals},
+			},
+			Name:    name,
+			Symbol:  symbol,
+			Display: displayDenom,
+		})
+	} else {
+		metas = append(metas, banktypes.Metadata{
+			Description: "Native 18-decimal denom metadata for Cosmos EVM chain",
+			Base:        evmDenom,
+			DenomUnits: []*banktypes.DenomUnit{
+				{Denom: evmDenom, Exponent: 0},
+				{Denom: displayDenom, Exponent: uint32(types.EighteenDecimals)},
+			},
+			Name:    name,
+			Symbol:  symbol,
+			Display: displayDenom,
+		})
+	}
+
+	return metas
 }

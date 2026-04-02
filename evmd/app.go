@@ -41,19 +41,6 @@ import (
 	evmkeeper "github.com/cosmos/evm/x/vm/keeper"
 	evmtypes "github.com/cosmos/evm/x/vm/types"
 	"github.com/cosmos/gogoproto/proto"
-	"github.com/cosmos/ibc-go/modules/capability"
-	capabilitykeeper "github.com/cosmos/ibc-go/modules/capability/keeper"
-	capabilitytypes "github.com/cosmos/ibc-go/modules/capability/types"
-	transfer "github.com/cosmos/ibc-go/v8/modules/apps/transfer"
-	transferkeeper "github.com/cosmos/ibc-go/v8/modules/apps/transfer/keeper"
-	ibctransfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
-	ibc "github.com/cosmos/ibc-go/v8/modules/core"
-	porttypes "github.com/cosmos/ibc-go/v8/modules/core/05-port/types"
-	ibcexported "github.com/cosmos/ibc-go/v8/modules/core/exported"
-	ibckeeper "github.com/cosmos/ibc-go/v8/modules/core/keeper"
-	ibctm "github.com/cosmos/ibc-go/v8/modules/light-clients/07-tendermint"
-	ibctesting "github.com/cosmos/ibc-go/v8/testing"
-	ibctestingtypes "github.com/cosmos/ibc-go/v8/testing/types"
 
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	reflectionv1 "cosmossdk.io/api/cosmos/reflection/v1"
@@ -144,7 +131,6 @@ var defaultNodeHome string
 var (
 	_ runtime.AppI                = (*EVMD)(nil)
 	_ cosmosevmserver.Application = (*EVMD)(nil)
-	_ ibctesting.TestingApp       = (*EVMD)(nil)
 )
 
 // EVMD extends an ABCI application, but with most of its parameters exported.
@@ -177,15 +163,6 @@ type EVMD struct {
 	EvidenceKeeper        evidencekeeper.Keeper
 	FeeGrantKeeper        feegrantkeeper.Keeper
 	ConsensusParamsKeeper consensusparamkeeper.Keeper
-
-	// capability keepers
-	CapabilityKeeper     *capabilitykeeper.Keeper
-	ScopedIBCKeeper      capabilitykeeper.ScopedKeeper
-	ScopedTransferKeeper capabilitykeeper.ScopedKeeper
-
-	// IBC keepers
-	IBCKeeper      *ibckeeper.Keeper // IBC Keeper must be a pointer in the app, so we can SetRouter on it correctly
-	TransferKeeper transferkeeper.Keeper
 
 	// Cosmos EVM keepers
 	FeeMarketKeeper   feemarketkeeper.Keeper
@@ -240,16 +217,12 @@ func NewExampleApp(
 		minttypes.StoreKey, distrtypes.StoreKey, slashingtypes.StoreKey,
 		govtypes.StoreKey, consensusparamtypes.StoreKey,
 		upgradetypes.StoreKey, feegrant.StoreKey, evidencetypes.StoreKey, authzkeeper.StoreKey,
-		// capability key
-		capabilitytypes.StoreKey,
-		// ibc keys
-		ibcexported.StoreKey, ibctransfertypes.StoreKey,
 		// Cosmos EVM store keys
 		evmtypes.StoreKey, feemarkettypes.StoreKey, erc20types.StoreKey, precisebanktypes.StoreKey,
 	)
 
 	tkeys := storetypes.NewTransientStoreKeys(evmtypes.TransientKey, feemarkettypes.TransientKey)
-	memKeys := storetypes.NewMemoryStoreKeys(capabilitytypes.MemStoreKey)
+	memKeys := storetypes.NewMemoryStoreKeys()
 
 	// load state streaming if enabled
 	if err := bApp.RegisterStreamingServices(appOpts, keys); err != nil {
@@ -389,23 +362,6 @@ func NewExampleApp(
 		authAddr,
 	)
 
-	// Create Capability Keeper and scope to IBC modules
-	app.CapabilityKeeper = capabilitykeeper.NewKeeper(appCodec, keys[capabilitytypes.StoreKey], memKeys[capabilitytypes.MemStoreKey])
-	app.ScopedIBCKeeper = app.CapabilityKeeper.ScopeToModule(ibcexported.ModuleName)
-	app.ScopedTransferKeeper = app.CapabilityKeeper.ScopeToModule(ibctransfertypes.ModuleName)
-	app.CapabilityKeeper.Seal()
-
-	// Create IBC Keeper
-	app.IBCKeeper = ibckeeper.NewKeeper(
-		appCodec,
-		keys[ibcexported.StoreKey],
-		nil,
-		app.StakingKeeper,
-		app.UpgradeKeeper,
-		app.ScopedIBCKeeper,
-		authAddr,
-	)
-
 	govConfig := govtypes.DefaultConfig()
 	/*
 		Example of setting gov params:
@@ -487,35 +443,8 @@ func NewExampleApp(
 		app.PreciseBankKeeper,
 		app.EVMKeeper,
 		app.StakingKeeper,
-		&app.TransferKeeper,
+		nil, // no IBC transfer keeper
 	)
-
-	// instantiate IBC transfer keeper AFTER the ERC-20 keeper to use it in the instantiation
-	app.TransferKeeper = transferkeeper.NewKeeper(
-		appCodec,
-		keys[ibctransfertypes.StoreKey],
-		nil,
-		app.IBCKeeper.ChannelKeeper,
-		app.IBCKeeper.ChannelKeeper,
-		app.IBCKeeper.PortKeeper,
-		app.AccountKeeper,
-		app.BankKeeper,
-		app.ScopedTransferKeeper,
-		authAddr,
-	)
-
-	// Create standard IBC transfer stack (no EVM-specific middleware)
-	var transferStack porttypes.IBCModule
-	transferStack = transfer.NewIBCModule(app.TransferKeeper)
-
-	// Create static IBC router, add transfer route, then set and seal it
-	ibcRouter := porttypes.NewRouter()
-	ibcRouter.AddRoute(ibctransfertypes.ModuleName, transferStack)
-
-	app.IBCKeeper.SetRouter(ibcRouter)
-
-	// Override the ICS20 app module
-	transferModule := transfer.NewAppModule(app.TransferKeeper)
 
 	/****  Module Options ****/
 
@@ -539,12 +468,6 @@ func NewExampleApp(
 		authzmodule.NewAppModule(appCodec, app.AuthzKeeper, app.AccountKeeper, app.BankKeeper, app.interfaceRegistry),
 		consensus.NewAppModule(appCodec, app.ConsensusParamsKeeper),
 		vesting.NewAppModule(app.AccountKeeper, app.BankKeeper),
-		// Capability module
-		capability.NewAppModule(appCodec, *app.CapabilityKeeper, false),
-		// IBC modules
-		ibc.NewAppModule(app.IBCKeeper),
-		ibctm.NewAppModule(),
-		transferModule,
 		// Cosmos EVM modules
 		vm.NewAppModule(app.EVMKeeper, app.AccountKeeper, app.BankKeeper, app.AccountKeeper.AddressCodec()),
 		feemarket.NewAppModule(app.FeeMarketKeeper),
@@ -559,10 +482,9 @@ func NewExampleApp(
 	app.BasicModuleManager = module.NewBasicManagerFromManager(
 		app.ModuleManager,
 		map[string]module.AppModuleBasic{
-			genutiltypes.ModuleName:     genutil.NewAppModuleBasic(genutiltypes.DefaultMessageValidator),
-			stakingtypes.ModuleName:     staking.AppModuleBasic{},
-			govtypes.ModuleName:         gov.NewAppModuleBasic(nil),
-			ibctransfertypes.ModuleName: transfer.AppModuleBasic{},
+			genutiltypes.ModuleName: genutil.NewAppModuleBasic(genutiltypes.DefaultMessageValidator),
+			stakingtypes.ModuleName: staking.AppModuleBasic{},
+			govtypes.ModuleName:     gov.NewAppModuleBasic(nil),
 		},
 	)
 	app.BasicModuleManager.RegisterLegacyAminoCodec(legacyAmino)
@@ -582,18 +504,12 @@ func NewExampleApp(
 	// NOTE: staking module is required if HistoricalEntries param > 0
 	// NOTE: capability module's beginblocker must come before any modules using capabilities (e.g. IBC)
 	app.ModuleManager.SetOrderBeginBlockers(
-		// NOTE: capability module's beginblocker must come before any modules using capabilities (e.g. IBC)
-		capabilitytypes.ModuleName,
 		minttypes.ModuleName,
-
-		// IBC modules
-		ibcexported.ModuleName, ibctransfertypes.ModuleName,
 
 		// Cosmos EVM BeginBlockers
 		erc20types.ModuleName, feemarkettypes.ModuleName,
 		evmtypes.ModuleName, // NOTE: EVM BeginBlocker must come after FeeMarket BeginBlocker
 
-		// TODO: remove no-ops? check if all are no-ops before removing
 		distrtypes.ModuleName, slashingtypes.ModuleName,
 		evidencetypes.ModuleName, stakingtypes.ModuleName,
 		authtypes.ModuleName, banktypes.ModuleName, govtypes.ModuleName, genutiltypes.ModuleName,
@@ -612,26 +528,21 @@ func NewExampleApp(
 		// Cosmos EVM EndBlockers
 		evmtypes.ModuleName, erc20types.ModuleName, feemarkettypes.ModuleName,
 
-		// no-ops
-		ibcexported.ModuleName, ibctransfertypes.ModuleName,
 		distrtypes.ModuleName,
 		slashingtypes.ModuleName, minttypes.ModuleName,
 		genutiltypes.ModuleName, evidencetypes.ModuleName, authz.ModuleName,
 		feegrant.ModuleName, upgradetypes.ModuleName, consensusparamtypes.ModuleName,
 		precisebanktypes.ModuleName,
 		vestingtypes.ModuleName,
-		capabilitytypes.ModuleName,
 	)
 
 	// NOTE: The genutils module must occur after staking so that pools are
 	// properly initialized with tokens from genesis accounts.
 	// NOTE: The genutils module must also occur after auth so that it can access the params from auth.
 	genesisModuleOrder := []string{
-		capabilitytypes.ModuleName,
 		authtypes.ModuleName, banktypes.ModuleName,
 		distrtypes.ModuleName, stakingtypes.ModuleName, slashingtypes.ModuleName, govtypes.ModuleName,
 		minttypes.ModuleName,
-		ibcexported.ModuleName,
 
 		// Cosmos EVM modules
 		//
@@ -642,7 +553,6 @@ func NewExampleApp(
 		erc20types.ModuleName,
 		precisebanktypes.ModuleName,
 
-		ibctransfertypes.ModuleName,
 		genutiltypes.ModuleName, evidencetypes.ModuleName, authz.ModuleName,
 		feegrant.ModuleName, upgradetypes.ModuleName, vestingtypes.ModuleName,
 	}
@@ -755,7 +665,6 @@ func (app *EVMD) setAnteHandler(txConfig client.TxConfig, maxGasWanted uint64) {
 		ExtensionOptionChecker: antetypes.HasDynamicFeeExtensionOption,
 		EvmKeeper:              app.EVMKeeper,
 		FeegrantKeeper:         app.FeeGrantKeeper,
-		IBCKeeper:              app.IBCKeeper,
 		FeeMarketKeeper:        app.FeeMarketKeeper,
 		SignModeHandler:        txConfig.SignModeHandler(),
 		SigGasConsumer:         evmante.SigVerificationGasConsumer,
@@ -947,29 +856,15 @@ func (app *EVMD) RegisterNodeService(clientCtx client.Context, cfg config.Config
 	node.RegisterNodeService(clientCtx, app.GRPCQueryRouter(), cfg)
 }
 
-// ---------------------------------------------
-// IBC Go TestingApp functions
-//
-
-// GetBaseApp implements the TestingApp interface.
+// GetBaseApp returns the BaseApp.
 func (app *EVMD) GetBaseApp() *baseapp.BaseApp {
 	return app.BaseApp
 }
 
-// GetStakingKeeperSDK implements the TestingApp interface.
 func (app *EVMD) GetStakingKeeperSDK() *stakingkeeper.Keeper {
 	return app.StakingKeeper
 }
 
-// GetIBCKeeper implements the TestingApp interface.
-func (app *EVMD) GetIBCKeeper() *ibckeeper.Keeper {
-	return app.IBCKeeper
-}
-
-// GetScopedIBCKeeper implements the TestingApp interface.
-func (app *EVMD) GetScopedIBCKeeper() capabilitykeeper.ScopedKeeper {
-	return app.ScopedIBCKeeper
-}
 
 func (app *EVMD) GetEVMKeeper() *evmkeeper.Keeper {
 	return app.EVMKeeper
@@ -1023,7 +918,7 @@ func (app *EVMD) GetDistrKeeper() distrkeeper.Keeper {
 	return app.DistrKeeper
 }
 
-func (app *EVMD) GetStakingKeeper() ibctestingtypes.StakingKeeper {
+func (app *EVMD) GetStakingKeeper() *stakingkeeper.Keeper {
 	return app.StakingKeeper
 }
 
@@ -1033,14 +928,6 @@ func (app *EVMD) GetMintKeeper() mintkeeper.Keeper {
 
 func (app *EVMD) GetPreciseBankKeeper() *precisebankkeeper.Keeper {
 	return &app.PreciseBankKeeper
-}
-
-func (app *EVMD) GetTransferKeeper() transferkeeper.Keeper {
-	return app.TransferKeeper
-}
-
-func (app *EVMD) SetTransferKeeper(transferKeeper transferkeeper.Keeper) {
-	app.TransferKeeper = transferKeeper
 }
 
 func (app *EVMD) GetMempool() sdkmempool.Mempool {

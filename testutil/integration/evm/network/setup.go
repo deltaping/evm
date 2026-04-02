@@ -91,7 +91,7 @@ func createValidatorSetAndSigners(numberOfValidators int) (*cmttypes.ValidatorSe
 	for i := 0; i < numberOfValidators; i++ {
 		privVal := mock.NewPV()
 		pubKey, _ := privVal.GetPubKey()
-		validator := cmttypes.NewValidator(pubKey, 1)
+		validator := cmttypes.NewValidator(pubKey, 1, false)
 		tmValidators = append(tmValidators, validator)
 		signers[pubKey.Address().String()] = privVal
 	}

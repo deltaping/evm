@@ -168,7 +168,6 @@ require (
 	github.com/hashicorp/go-safetemp v1.0.0 // indirect
 	github.com/hashicorp/go-version v1.7.0 // indirect
 	github.com/hashicorp/golang-lru v1.0.2 // indirect
-	github.com/hashicorp/golang-lru/v2 v2.0.7 // indirect
 	github.com/hashicorp/yamux v0.1.2 // indirect
 	github.com/hdevalence/ed25519consensus v0.2.0 // indirect
 	github.com/holiman/bloomfilter/v2 v2.0.3 // indirect
@@ -184,6 +183,7 @@ require (
 	github.com/kr/pretty v0.3.1 // indirect
 	github.com/kr/text v0.2.0 // indirect
 	github.com/lib/pq v1.10.9 // indirect
+	github.com/libp2p/go-buffer-pool v0.1.0 // indirect
 	github.com/manifoldco/promptui v0.9.0 // indirect
 	github.com/mattn/go-colorable v0.1.14 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
@@ -272,8 +272,19 @@ require (
 )
 
 replace (
+	// use dydx store fork (required by dydx cosmos-sdk fork)
+	cosmossdk.io/store => github.com/dydxprotocol/cosmos-sdk/store v1.0.3-0.20240326190927-d35618165018
 	// use cosmos fork of keyring
 	github.com/99designs/keyring => github.com/cosmos/keyring v1.2.0
+	// pin btcec to match dydx CometBFT fork expectations
+	github.com/btcsuite/btcd/btcec/v2 => github.com/btcsuite/btcd/btcec/v2 v2.3.2
+	// use dydx CometBFT fork (required by dydx cosmos-sdk fork)
+	github.com/cometbft/cometbft => github.com/dydxprotocol/cometbft v0.38.6-0.20260126154011-467083c7ba0b
+	// pin cosmos-db and iavl to match dydx store fork expectations
+	github.com/cosmos/cosmos-db => github.com/cosmos/cosmos-db v1.0.2
+	// to use the same cosmos-sdk as svpchain project
+	github.com/cosmos/cosmos-sdk => github.com/dydxprotocol/cosmos-sdk v0.50.6-0.20260126162345-69ba38d4ae69
+	github.com/cosmos/iavl => github.com/cosmos/iavl v1.0.1
 	// use Cosmos geth fork
 	// branch: release/1.16
 	github.com/ethereum/go-ethereum => github.com/cosmos/go-ethereum v1.16.2-cosmos-1

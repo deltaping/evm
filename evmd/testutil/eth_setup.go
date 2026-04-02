@@ -55,7 +55,7 @@ func NewTestGenesisState(app evm.EvmApp) testutil.GenesisState {
 		panic(err)
 	}
 	// create validator set with single validator
-	validator := cmtypes.NewValidator(pubKey, 1)
+	validator := cmtypes.NewValidator(pubKey, 1, false)
 	valSet := cmtypes.NewValidatorSet([]*cmtypes.Validator{validator})
 
 	// generate genesis account

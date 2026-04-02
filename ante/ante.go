@@ -2,7 +2,6 @@ package ante
 
 import (
 	anteinterfaces "github.com/cosmos/evm/ante/interfaces"
-	ibckeeper "github.com/cosmos/ibc-go/v8/modules/core/keeper"
 
 	errorsmod "cosmossdk.io/errors"
 	storetypes "cosmossdk.io/store/types"
@@ -22,7 +21,7 @@ type HandlerOptions struct {
 	Cdc                    codec.BinaryCodec
 	AccountKeeper          anteinterfaces.AccountKeeper
 	BankKeeper             anteinterfaces.BankKeeper
-	IBCKeeper              *ibckeeper.Keeper
+	IBCKeeper              interface{} // optional, set to *ibckeeper.Keeper if IBC is enabled
 	FeeMarketKeeper        anteinterfaces.FeeMarketKeeper
 	EvmKeeper              anteinterfaces.EVMKeeper
 	FeegrantKeeper         ante.FeegrantKeeper
@@ -45,9 +44,6 @@ func (options HandlerOptions) Validate() error {
 	}
 	if options.BankKeeper == nil {
 		return errorsmod.Wrap(errortypes.ErrLogic, "bank keeper is required for AnteHandler")
-	}
-	if options.IBCKeeper == nil {
-		return errorsmod.Wrap(errortypes.ErrLogic, "ibc keeper is required for AnteHandler")
 	}
 	if options.FeeMarketKeeper == nil {
 		return errorsmod.Wrap(errortypes.ErrLogic, "fee market keeper is required for AnteHandler")
