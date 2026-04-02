@@ -63,7 +63,11 @@ func (s *TestSuite) TestTraceTransaction() {
 	}{
 		{
 			"fail - tx not found",
-			func() {},
+			func() {
+				client := s.backend.ClientCtx.Client.(*mocks.Client)
+				client.On("TxSearch", mock.Anything, mock.Anything, false, (*int)(nil), (*int)(nil), "").
+					Return(&tmrpctypes.ResultTxSearch{}, nil)
+			},
 			&types.Block{Header: types.Header{Height: 1}, Data: types.Data{Txs: []types.Tx{}}},
 			[]*abci.ExecTxResult{
 				{

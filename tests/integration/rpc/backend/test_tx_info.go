@@ -322,6 +322,7 @@ func (s *TestSuite) TestGetTransactionByBlockAndIndex() {
 			func() {
 				client := s.backend.ClientCtx.Client.(*mocks.Client)
 				RegisterBlockResults(client, 1)
+				RegisterTxSearchEmpty(client, "tx.height=1 AND ethereum_tx.txIndex=1")
 			},
 			&cmtrpctypes.ResultBlock{Block: types.MakeBlock(1, []types.Tx{bz}, nil, nil)},
 			1,
@@ -335,6 +336,7 @@ func (s *TestSuite) TestGetTransactionByBlockAndIndex() {
 				client := s.backend.ClientCtx.Client.(*mocks.Client)
 				RegisterBlockResults(client, 1)
 				RegisterBaseFeeError(QueryClient)
+				RegisterTxSearchEmpty(client, "tx.height=1 AND ethereum_tx.txIndex=0")
 			},
 			&cmtrpctypes.ResultBlock{Block: defaultBlock},
 			0,
@@ -367,6 +369,7 @@ func (s *TestSuite) TestGetTransactionByBlockAndIndex() {
 				client := s.backend.ClientCtx.Client.(*mocks.Client)
 				RegisterBlockResults(client, 1)
 				RegisterBaseFee(QueryClient, math.NewInt(1))
+				RegisterTxSearchEmpty(client, "tx.height=1 AND ethereum_tx.txIndex=0")
 			},
 			&cmtrpctypes.ResultBlock{Block: defaultBlock},
 			0,
@@ -432,6 +435,7 @@ func (s *TestSuite) TestGetTransactionByBlockNumberAndIndex() {
 				RegisterBlock(client, 1, bz)
 				RegisterBlockResults(client, 1)
 				RegisterBaseFee(QueryClient, math.NewInt(1))
+				RegisterTxSearchEmpty(client, "tx.height=1 AND ethereum_tx.txIndex=0")
 			},
 			0,
 			0,
@@ -559,8 +563,12 @@ func (s *TestSuite) TestGetTransactionReceipt() {
 	}{
 		// TODO test happy path
 		{
-			name:         "success - tx not found",
-			registerMock: func() {},
+			name: "success - tx not found",
+			registerMock: func() {
+				client := s.backend.ClientCtx.Client.(*mocks.Client)
+				client.On("TxSearch", mock.Anything, mock.Anything, false, (*int)(nil), (*int)(nil), "").
+					Return(&cmtrpctypes.ResultTxSearch{}, nil)
+			},
 			block:        &types.Block{Header: types.Header{Height: 1}, Data: types.Data{Txs: []types.Tx{txBz}}},
 			tx:           msgEthereumTx2,
 			blockResult: []*abci.ExecTxResult{
