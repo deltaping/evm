@@ -1,7 +1,7 @@
 // Copied from https://github.com/cosmos/ibc-go/blob/7325bd2b00fd5e33d895770ec31b5be2f497d37a/modules/apps/transfer/transfer_test.go
 // Why was this copied?
 // This test suite was imported to validate that ExampleChain (an EVM-based chain)
-// correctly supports IBC v1 token transfers using ibc-go’s Transfer module logic.
+// correctly supports IBC v1 token transfers using ibc-go's Transfer module logic.
 // The test ensures that multi-hop transfers (A → B → C → B) behave as expected across channels.
 package ibc
 
@@ -88,7 +88,6 @@ func (suite *TransferTestSuite) TestHandleMsgTransfer() {
 			// pathAToB.EndpointB = endpoint on chainB
 			pathAToB := evmibctesting.NewTransferPath(suite.evmChainA, suite.chainB)
 			pathAToB.Setup()
-			traceAToB := types.NewHop(pathAToB.EndpointB.ChannelConfig.PortID, pathAToB.EndpointB.ChannelID)
 
 			senderIdx := 1
 			senderAccount := suite.evmChainA.SenderAccounts[senderIdx]
@@ -121,9 +120,10 @@ func (suite *TransferTestSuite) TestHandleMsgTransfer() {
 			suite.Require().NoError(err)
 
 			// Get the packet data to determine the amount of tokens being transferred (needed for sending entire balance)
-			packetData, err := types.UnmarshalPacketData(packet.GetData(), pathAToB.EndpointA.GetChannel().Version, "")
+			var packetData types.FungibleTokenPacketData
+			err = types.ModuleCdc.UnmarshalJSON(packet.GetData(), &packetData)
 			suite.Require().NoError(err)
-			transferAmount, ok := sdkmath.NewIntFromString(packetData.Token.Amount)
+			transferAmount, ok := sdkmath.NewIntFromString(packetData.Amount)
 			suite.Require().True(ok)
 
 			afterSenderBalance := evmApp.BankKeeper.GetBalance(suite.evmChainA.GetContext(), senderAddr, sourceDenomToTransfer)
@@ -162,14 +162,17 @@ func (suite *TransferTestSuite) TestHandleMsgTransfer() {
 			suite.Require().True(transferAmount.Equal(chainAEscrowBalance.Amount))
 
 			// check that voucher exists on chain B
+			// In ibc-go v8, use DenomTrace with path "port/channel/baseDenom"
+			voucherDenomTrace := types.ParseDenomTrace(
+				types.GetPrefixedDenom(pathAToB.EndpointB.ChannelConfig.PortID, pathAToB.EndpointB.ChannelID, originalCoin.Denom),
+			)
 			chainBApp := suite.chainB.GetSimApp()
-			chainBDenom := types.NewDenom(originalCoin.Denom, traceAToB)
 			chainBBalance := chainBApp.BankKeeper.GetBalance(
 				suite.chainB.GetContext(),
 				suite.chainB.SenderAccount.GetAddress(),
-				chainBDenom.IBCDenom(),
+				voucherDenomTrace.IBCDenom(),
 			)
-			coinSentFromAToB := sdk.NewCoin(chainBDenom.IBCDenom(), transferAmount)
+			coinSentFromAToB := sdk.NewCoin(voucherDenomTrace.IBCDenom(), transferAmount)
 			suite.Require().Equal(coinSentFromAToB, chainBBalance)
 
 			// setup between chainB to chainC
@@ -178,7 +181,6 @@ func (suite *TransferTestSuite) TestHandleMsgTransfer() {
 			// pathBToC.EndpointB = endpoint on chainC
 			pathBToC := evmibctesting.NewTransferPath(suite.chainB, suite.chainC)
 			pathBToC.Setup()
-			traceBToC := types.NewHop(pathBToC.EndpointB.ChannelConfig.PortID, pathBToC.EndpointB.ChannelID)
 
 			// send from chainB to chainC
 			msg = types.NewMsgTransfer(
@@ -201,11 +203,16 @@ func (suite *TransferTestSuite) TestHandleMsgTransfer() {
 			coinsSentFromBToC := sdk.NewCoins()
 			// check balances for chainB and chainC after transfer from chainB to chainC
 			// NOTE: fungible token is prefixed with the full trace in order to verify the packet commitment
-			chainCDenom := types.NewDenom(originalCoin.Denom, traceBToC, traceAToB)
+			fullDenomPath := types.GetPrefixedDenom(
+				pathBToC.EndpointB.ChannelConfig.PortID,
+				pathBToC.EndpointB.ChannelID,
+				voucherDenomTrace.GetFullDenomPath(),
+			)
+			chainCDenomTrace := types.ParseDenomTrace(fullDenomPath)
 
 			// check that the balance is updated on chainC
 			chainCApp := suite.chainC.GetSimApp()
-			coinSentFromBToC := sdk.NewCoin(chainCDenom.IBCDenom(), transferAmount)
+			coinSentFromBToC := sdk.NewCoin(chainCDenomTrace.IBCDenom(), transferAmount)
 			chainCBalance := chainCApp.BankKeeper.GetBalance(
 				suite.chainC.GetContext(),
 				suite.chainC.SenderAccount.GetAddress(),
@@ -259,7 +266,11 @@ func (suite *TransferTestSuite) TestHandleMsgTransfer() {
 			suite.Require().Equal(coinSentFromAToB, chainBBalance)
 
 			// check that module account escrow address is empty
-			escrowAddress = types.GetEscrowAddress(traceBToC.PortId, traceBToC.ChannelId)
+			// In v8, use the trace's PortId/ChannelId from the B->C path
+			escrowAddress = types.GetEscrowAddress(
+				pathBToC.EndpointA.ChannelConfig.PortID,
+				pathBToC.EndpointA.ChannelID,
+			)
 			chainBEscrowBalance := chainBApp.BankKeeper.GetBalance(
 				suite.chainB.GetContext(),
 				escrowAddress,

@@ -5,9 +5,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 
 	dbm "github.com/cosmos/cosmos-db"
-	ibctesting "github.com/cosmos/ibc-go/v8/testing"
 
 	"github.com/cosmos/evm"
+	evmibctesting "github.com/cosmos/evm/testutil/ibc"
 	"github.com/cosmos/evm/config"
 	"github.com/cosmos/evm/evmd"
 	srvflags "github.com/cosmos/evm/server/flags"
@@ -50,7 +50,7 @@ func CreateEvmd(chainID string, evmChainID uint64, customBaseAppOptions ...func(
 
 // SetupEvmd initializes a new evmd app with default genesis state.
 // It is used in IBC integration tests to create a new evmd app instance.
-func SetupEvmd() (ibctesting.TestingApp, map[string]json.RawMessage) {
+func SetupEvmd() (evmibctesting.TestingApp, map[string]json.RawMessage) {
 	app := evmd.NewExampleApp(
 		log.NewNopLogger(),
 		dbm.NewMemDB(),
