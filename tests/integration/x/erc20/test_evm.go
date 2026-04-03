@@ -114,13 +114,12 @@ func (s *KeeperTestSuite) TestBalanceOf() {
 	for _, tc := range testCases {
 		s.SetupTest() // reset
 		mockEVMKeeper = &erc20mocks.EVMKeeper{}
-		transferKeeper := s.network.App.GetTransferKeeper()
 		erc20Keeper := keeper.NewKeeper(
 			s.network.App.GetKey("erc20"), s.network.App.AppCodec(),
 			authtypes.NewModuleAddress(govtypes.ModuleName),
 			s.network.App.GetAccountKeeper(), s.network.App.GetBankKeeper(),
 			mockEVMKeeper, s.network.App.GetStakingKeeperSDK(),
-			&transferKeeper,
+			nil,
 		)
 		s.network.App.SetErc20Keeper(erc20Keeper)
 
@@ -215,13 +214,12 @@ func (s *KeeperTestSuite) TestQueryERC20ForceFail() {
 
 		// TODO: what's the reason we are using mockEVMKeeper here? Instead of just passing the s.app.EVMKeeper?
 		mockEVMKeeper = &erc20mocks.EVMKeeper{}
-		transferKeeper := s.network.App.GetTransferKeeper()
 		erc20Keeper := keeper.NewKeeper(
 			s.network.App.GetKey("erc20"), s.network.App.AppCodec(),
 			authtypes.NewModuleAddress(govtypes.ModuleName),
 			s.network.App.GetAccountKeeper(), s.network.App.GetBankKeeper(),
 			mockEVMKeeper, s.network.App.GetStakingKeeperSDK(),
-			&transferKeeper,
+			nil,
 		)
 		s.network.App.SetErc20Keeper(erc20Keeper)
 
@@ -394,14 +392,13 @@ func (s *KeeperTestSuite) TestQueryERC20Bytes32Fallback() {
 		s.Run(tc.name, func() {
 			s.SetupTest() // reset
 
-			transferKeeper := s.network.App.GetTransferKeeper()
 			mockEVMKeeper = &erc20mocks.EVMKeeper{}
 			s.network.App.SetErc20Keeper(keeper.NewKeeper(
 				s.network.App.GetKey("erc20"), s.network.App.AppCodec(),
 				authtypes.NewModuleAddress(govtypes.ModuleName),
 				s.network.App.GetAccountKeeper(), s.network.App.GetBankKeeper(),
 				mockEVMKeeper, s.network.App.GetStakingKeeperSDK(),
-				&transferKeeper,
+				nil,
 			))
 
 			tc.malleate()

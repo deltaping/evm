@@ -148,7 +148,7 @@ func (s *benchmarkSuite) generateHandlerOptions() ante.HandlerOptions {
 		ExtensionOptionChecker: antetypes.HasDynamicFeeExtensionOption,
 		EvmKeeper:              s.network.App.GetEVMKeeper(),
 		FeegrantKeeper:         s.network.App.GetFeeGrantKeeper(),
-		IBCKeeper:              s.network.App.GetIBCKeeper(),
+		IBCKeeper:              nil,
 		FeeMarketKeeper:        s.network.App.GetFeeMarketKeeper(),
 		SignModeHandler:        encCfg.TxConfig.SignModeHandler(),
 		SigGasConsumer:         ante.SigVerificationGasConsumer,

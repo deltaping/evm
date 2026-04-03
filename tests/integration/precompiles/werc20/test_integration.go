@@ -165,7 +165,7 @@ func TestPrecompileIntegrationTestSuite(t *testing.T, create network.CreateEvmAp
 				tokenPair,
 				is.network.App.GetBankKeeper(),
 				is.network.App.GetErc20Keeper(),
-				is.network.App.GetTransferKeeper(),
+				nil,
 			)
 			is.precompile = precompile
 

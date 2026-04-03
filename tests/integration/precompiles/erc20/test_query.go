@@ -9,7 +9,6 @@ import (
 
 	"github.com/cosmos/evm/precompiles/erc20"
 	"github.com/cosmos/evm/testutil"
-	transferkeeper "github.com/cosmos/ibc-go/v8/modules/apps/transfer/keeper"
 	"github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
 
 	sdkmath "cosmossdk.io/math"
@@ -112,7 +111,7 @@ func (s *PrecompileTestSuite) TestNameSymbol() {
 	testcases := []struct {
 		name        string
 		denom       string
-		malleate    func(sdk.Context, bankkeeper.Keeper, transferkeeper.Keeper)
+		malleate    func(sdk.Context, bankkeeper.Keeper)
 		expPass     bool
 		errContains string
 		expName     string
@@ -131,8 +130,8 @@ func (s *PrecompileTestSuite) TestNameSymbol() {
 		{
 			name:  "fail - invalid denom (too short < 3 chars)",
 			denom: tooShort.IBCDenom(),
-			malleate: func(ctx sdk.Context, _ bankkeeper.Keeper, keeper transferkeeper.Keeper) {
-				keeper.SetDenomTrace(ctx, tooShort)
+			malleate: func(_ sdk.Context, _ bankkeeper.Keeper) {
+				// SetDenomTrace removed: transfer keeper no longer available
 			},
 			errContains: vm.ErrExecutionReverted.Error(),
 		},
@@ -144,8 +143,8 @@ func (s *PrecompileTestSuite) TestNameSymbol() {
 		{
 			name:  "pass - valid ibc denom without metadata and neither atto nor micro prefix",
 			denom: validDenomNoMicroAtto.IBCDenom(),
-			malleate: func(ctx sdk.Context, _ bankkeeper.Keeper, keeper transferkeeper.Keeper) {
-				keeper.SetDenomTrace(ctx, validDenomNoMicroAtto)
+			malleate: func(_ sdk.Context, _ bankkeeper.Keeper) {
+				// SetDenomTrace removed: transfer keeper no longer available
 			},
 			expPass:   true,
 			expName:   "Atom",
@@ -154,7 +153,7 @@ func (s *PrecompileTestSuite) TestNameSymbol() {
 		{
 			name:  "pass - valid denom with metadata",
 			denom: validMetadataDenom,
-			malleate: func(ctx sdk.Context, keeper bankkeeper.Keeper, _ transferkeeper.Keeper) {
+			malleate: func(ctx sdk.Context, keeper bankkeeper.Keeper) {
 				// NOTE: we mint some coins to the inflation module address to be able to set denom metadata
 				err := keeper.MintCoins(ctx, minttypes.ModuleName, sdk.Coins{sdk.NewInt64Coin(validMetadata.Base, 1)})
 				s.Require().NoError(err)
@@ -169,8 +168,8 @@ func (s *PrecompileTestSuite) TestNameSymbol() {
 		{
 			name:  "pass - valid ibc denom without metadata",
 			denom: validDenom.IBCDenom(),
-			malleate: func(ctx sdk.Context, _ bankkeeper.Keeper, keeper transferkeeper.Keeper) {
-				keeper.SetDenomTrace(ctx, validDenom)
+			malleate: func(_ sdk.Context, _ bankkeeper.Keeper) {
+				// SetDenomTrace removed: transfer keeper no longer available
 			},
 			expPass:   true,
 			expName:   "Osmo",
@@ -183,7 +182,7 @@ func (s *PrecompileTestSuite) TestNameSymbol() {
 			s.SetupTest()
 
 			if tc.malleate != nil {
-				tc.malleate(s.network.GetContext(), s.network.App.GetBankKeeper(), s.network.App.GetTransferKeeper())
+				tc.malleate(s.network.GetContext(), s.network.App.GetBankKeeper())
 			}
 
 			precompile, err := s.setupERC20Precompile(tc.denom)
@@ -224,7 +223,7 @@ func (s *PrecompileTestSuite) TestDecimals() {
 	testcases := []struct {
 		name        string
 		denom       string
-		malleate    func(sdk.Context, bankkeeper.Keeper, transferkeeper.Keeper)
+		malleate    func(sdk.Context, bankkeeper.Keeper)
 		expPass     bool
 		errContains string
 		expDecimals uint8
@@ -247,16 +246,16 @@ func (s *PrecompileTestSuite) TestDecimals() {
 		{
 			name:  "fail - valid ibc denom without metadata and neither atto nor micro prefix",
 			denom: validDenomNoMicroAtto.IBCDenom(),
-			malleate: func(ctx sdk.Context, _ bankkeeper.Keeper, keeper transferkeeper.Keeper) {
-				keeper.SetDenomTrace(ctx, validDenomNoMicroAtto)
+			malleate: func(_ sdk.Context, _ bankkeeper.Keeper) {
+				// SetDenomTrace removed: transfer keeper no longer available
 			},
 			errContains: vm.ErrExecutionReverted.Error(),
 		},
 		{
 			name:  "pass - invalid denom (too short < 3 chars)",
 			denom: tooShort.IBCDenom(),
-			malleate: func(ctx sdk.Context, _ bankkeeper.Keeper, keeper transferkeeper.Keeper) {
-				keeper.SetDenomTrace(ctx, tooShort)
+			malleate: func(_ sdk.Context, _ bankkeeper.Keeper) {
+				// SetDenomTrace removed: transfer keeper no longer available
 			},
 			expPass:     true, // TODO: do we want to check in decimals query for the above error?
 			expDecimals: 18,   // expect 18 decimals here because of "a" prefix
@@ -264,7 +263,7 @@ func (s *PrecompileTestSuite) TestDecimals() {
 		{
 			name:  "pass - valid denom with metadata",
 			denom: validMetadataDenom,
-			malleate: func(ctx sdk.Context, keeper bankkeeper.Keeper, _ transferkeeper.Keeper) {
+			malleate: func(ctx sdk.Context, keeper bankkeeper.Keeper) {
 				// NOTE: we mint some coins to the inflation module address to be able to set denom metadata
 				err := keeper.MintCoins(ctx, minttypes.ModuleName, sdk.Coins{sdk.NewInt64Coin(validMetadata.Base, 1)})
 				s.Require().NoError(err)
@@ -278,8 +277,8 @@ func (s *PrecompileTestSuite) TestDecimals() {
 		{
 			name:  "pass - valid ibc denom without metadata",
 			denom: validDenom.IBCDenom(),
-			malleate: func(ctx sdk.Context, _ bankkeeper.Keeper, keeper transferkeeper.Keeper) {
-				keeper.SetDenomTrace(ctx, validDenom)
+			malleate: func(_ sdk.Context, _ bankkeeper.Keeper) {
+				// SetDenomTrace removed: transfer keeper no longer available
 			},
 			expPass:     true,
 			expDecimals: 6,
@@ -287,8 +286,8 @@ func (s *PrecompileTestSuite) TestDecimals() {
 		{
 			name:  "pass - valid ibc denom without metadata and 18 decimals",
 			denom: validAttoDenom.IBCDenom(),
-			malleate: func(ctx sdk.Context, _ bankkeeper.Keeper, keeper transferkeeper.Keeper) {
-				keeper.SetDenomTrace(ctx, validAttoDenom)
+			malleate: func(_ sdk.Context, _ bankkeeper.Keeper) {
+				// SetDenomTrace removed: transfer keeper no longer available
 			},
 			expPass:     true,
 			expDecimals: 18,
@@ -296,7 +295,7 @@ func (s *PrecompileTestSuite) TestDecimals() {
 		{
 			name:  "pass - valid denom with metadata but decimals overflow",
 			denom: validMetadataDenom,
-			malleate: func(ctx sdk.Context, keeper bankkeeper.Keeper, _ transferkeeper.Keeper) {
+			malleate: func(ctx sdk.Context, keeper bankkeeper.Keeper) {
 				// NOTE: we mint some coins to the inflation module address to be able to set denom metadata
 				err := keeper.MintCoins(ctx, minttypes.ModuleName, sdk.Coins{sdk.NewInt64Coin(validMetadata.Base, 1)})
 				s.Require().NoError(err)
@@ -309,7 +308,7 @@ func (s *PrecompileTestSuite) TestDecimals() {
 		{
 			name:  "pass - valid ibc denom with metadata but no display denom",
 			denom: validMetadataDenom,
-			malleate: func(ctx sdk.Context, keeper bankkeeper.Keeper, _ transferkeeper.Keeper) {
+			malleate: func(ctx sdk.Context, keeper bankkeeper.Keeper) {
 				// NOTE: we mint some coins to the inflation module address to be able to set denom metadata
 				err := keeper.MintCoins(ctx, minttypes.ModuleName, sdk.Coins{sdk.NewInt64Coin(validMetadata.Base, 1)})
 				s.Require().NoError(err)
@@ -322,7 +321,7 @@ func (s *PrecompileTestSuite) TestDecimals() {
 		{
 			name:  "pass - valid IBC denom with metadata using display path",
 			denom: "ibc/B89BE1E96B3DBC0ABB05F858F08561BA12B9C5E420CA2F5E83C475CCB47A834E",
-			malleate: func(ctx sdk.Context, keeper bankkeeper.Keeper, _ transferkeeper.Keeper) {
+			malleate: func(ctx sdk.Context, keeper bankkeeper.Keeper) {
 				keeper.SetDenomMetaData(ctx, banktypes.Metadata{
 					Base: "ibc/B89BE1E96B3DBC0ABB05F858F08561BA12B9C5E420CA2F5E83C475CCB47A834E",
 					DenomUnits: []*banktypes.DenomUnit{
@@ -346,7 +345,7 @@ func (s *PrecompileTestSuite) TestDecimals() {
 		{
 			name:  "fail - IBC denom with metadata but no matching display unit",
 			denom: "ibc/C1D2E3F4567890123456789012345678901234567890123456789012345678901234",
-			malleate: func(ctx sdk.Context, keeper bankkeeper.Keeper, _ transferkeeper.Keeper) {
+			malleate: func(ctx sdk.Context, keeper bankkeeper.Keeper) {
 				keeper.SetDenomMetaData(ctx, banktypes.Metadata{
 					Base: "ibc/C1D2E3F4567890123456789012345678901234567890123456789012345678901234",
 					DenomUnits: []*banktypes.DenomUnit{
@@ -374,7 +373,7 @@ func (s *PrecompileTestSuite) TestDecimals() {
 			s.SetupTest()
 
 			if tc.malleate != nil {
-				tc.malleate(s.network.GetContext(), s.network.App.GetBankKeeper(), s.network.App.GetTransferKeeper())
+				tc.malleate(s.network.GetContext(), s.network.App.GetBankKeeper())
 			}
 
 			precompile, err := s.setupERC20Precompile(tc.denom)

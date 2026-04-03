@@ -175,7 +175,7 @@ func (is *IntegrationTestSuite) setupERC20Precompile(denom string, tokenPairs []
 		tokenPair,
 		is.network.App.GetBankKeeper(),
 		is.network.App.GetErc20Keeper(),
-		is.network.App.GetTransferKeeper(),
+		nil,
 	)
 }
 
@@ -189,7 +189,7 @@ func setupERC20PrecompileForTokenPair(
 		tokenPair,
 		unitNetwork.App.GetBankKeeper(),
 		unitNetwork.App.GetErc20Keeper(),
-		unitNetwork.App.GetTransferKeeper(),
+		nil,
 	)
 	if err := unitNetwork.App.GetErc20Keeper().EnableDynamicPrecompile(
 		unitNetwork.GetContext(),
@@ -211,7 +211,7 @@ func (is *IntegrationTestSuite) setupNewERC20PrecompileForTokenPair(
 		tokenPair,
 		is.network.App.GetBankKeeper(),
 		is.network.App.GetErc20Keeper(),
-		is.network.App.GetTransferKeeper(),
+		nil,
 	)
 
 	// Update the params via gov proposal

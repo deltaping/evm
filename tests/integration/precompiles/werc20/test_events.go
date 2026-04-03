@@ -76,7 +76,7 @@ func (s *PrecompileUnitTestSuite) SetupTest(chainID testconstants.ChainID) {
 		tokenPair,
 		s.network.App.GetBankKeeper(),
 		s.network.App.GetErc20Keeper(),
-		s.network.App.GetTransferKeeper(),
+		nil,
 	)
 	s.Require().NotNil(precompile)
 	s.precompile = precompile

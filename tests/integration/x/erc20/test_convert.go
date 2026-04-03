@@ -128,12 +128,11 @@ func (s *KeeperTestSuite) TestConvertERC20IntoCoinsForNativeToken() {
 			func(common.Address) {},
 			func() {
 				mockEVMKeeper := &erc20mocks.EVMKeeper{}
-				transferKeeper := s.network.App.GetTransferKeeper()
 				erc20Keeper := keeper.NewKeeper(
 					s.network.App.GetKey("erc20"), s.network.App.AppCodec(),
 					authtypes.NewModuleAddress(govtypes.ModuleName), s.network.App.GetAccountKeeper(),
 					s.network.App.GetBankKeeper(), mockEVMKeeper, s.network.App.GetStakingKeeperSDK(),
-					&transferKeeper,
+					nil,
 				)
 				s.network.App.SetErc20Keeper(erc20Keeper)
 
@@ -158,12 +157,11 @@ func (s *KeeperTestSuite) TestConvertERC20IntoCoinsForNativeToken() {
 			func(common.Address) {},
 			func() {
 				mockEVMKeeper := &erc20mocks.EVMKeeper{}
-				transferKeeper := s.network.App.GetTransferKeeper()
 				erc20Keeper := keeper.NewKeeper(
 					s.network.App.GetKey("erc20"), s.network.App.AppCodec(),
 					authtypes.NewModuleAddress(govtypes.ModuleName), s.network.App.GetAccountKeeper(),
 					s.network.App.GetBankKeeper(), mockEVMKeeper, s.network.App.GetStakingKeeperSDK(),
-					&transferKeeper,
+					nil,
 				)
 				s.network.App.SetErc20Keeper(erc20Keeper)
 
@@ -187,12 +185,11 @@ func (s *KeeperTestSuite) TestConvertERC20IntoCoinsForNativeToken() {
 			func(common.Address) {},
 			func() {
 				mockEVMKeeper := &erc20mocks.EVMKeeper{}
-				transferKeeper := s.network.App.GetTransferKeeper()
 				erc20Keeper := keeper.NewKeeper(
 					s.network.App.GetKey("erc20"), s.network.App.AppCodec(),
 					authtypes.NewModuleAddress(govtypes.ModuleName), s.network.App.GetAccountKeeper(),
 					s.network.App.GetBankKeeper(), mockEVMKeeper, s.network.App.GetStakingKeeperSDK(),
-					&transferKeeper,
+					nil,
 				)
 				s.network.App.SetErc20Keeper(erc20Keeper)
 
@@ -216,12 +213,11 @@ func (s *KeeperTestSuite) TestConvertERC20IntoCoinsForNativeToken() {
 			func(common.Address) {},
 			func() {
 				mockEVMKeeper := &erc20mocks.EVMKeeper{}
-				transferKeeper := s.network.App.GetTransferKeeper()
 				erc20Keeper := keeper.NewKeeper(
 					s.network.App.GetKey("erc20"), s.network.App.AppCodec(),
 					authtypes.NewModuleAddress(govtypes.ModuleName), s.network.App.GetAccountKeeper(),
 					s.network.App.GetBankKeeper(), mockEVMKeeper, s.network.App.GetStakingKeeperSDK(),
-					&transferKeeper,
+					nil,
 				)
 				s.network.App.SetErc20Keeper(erc20Keeper)
 
@@ -247,12 +243,11 @@ func (s *KeeperTestSuite) TestConvertERC20IntoCoinsForNativeToken() {
 			func() {
 				ctrl := gomock.NewController(s.T())
 				mockBankKeeper := erc20mocks.NewMockBankKeeper(ctrl)
-				transferKeeper := s.network.App.GetTransferKeeper()
 				erc20Keeper := keeper.NewKeeper(
 					s.network.App.GetKey("erc20"), s.network.App.AppCodec(),
 					authtypes.NewModuleAddress(govtypes.ModuleName), s.network.App.GetAccountKeeper(),
 					mockBankKeeper, s.network.App.GetEVMKeeper(), s.network.App.GetStakingKeeperSDK(),
-					&transferKeeper,
+					nil,
 				)
 				s.network.App.SetErc20Keeper(erc20Keeper)
 
@@ -274,12 +269,11 @@ func (s *KeeperTestSuite) TestConvertERC20IntoCoinsForNativeToken() {
 			func() {
 				ctrl := gomock.NewController(s.T())
 				mockBankKeeper := erc20mocks.NewMockBankKeeper(ctrl)
-				transferKeeper := s.network.App.GetTransferKeeper()
 				erc20Keeper := keeper.NewKeeper(
 					s.network.App.GetKey("erc20"), s.network.App.AppCodec(),
 					authtypes.NewModuleAddress(govtypes.ModuleName), s.network.App.GetAccountKeeper(),
 					mockBankKeeper, s.network.App.GetEVMKeeper(), s.network.App.GetStakingKeeperSDK(),
-					&transferKeeper,
+					nil,
 				)
 				s.network.App.SetErc20Keeper(erc20Keeper)
 
@@ -301,12 +295,11 @@ func (s *KeeperTestSuite) TestConvertERC20IntoCoinsForNativeToken() {
 			func() {
 				ctrl := gomock.NewController(s.T())
 				mockBankKeeper := erc20mocks.NewMockBankKeeper(ctrl)
-				transferKeeper := s.network.App.GetTransferKeeper()
 				erc20Keeper := keeper.NewKeeper(
 					s.network.App.GetKey("erc20"), s.network.App.AppCodec(),
 					authtypes.NewModuleAddress(govtypes.ModuleName), s.network.App.GetAccountKeeper(),
 					mockBankKeeper, s.network.App.GetEVMKeeper(), s.network.App.GetStakingKeeperSDK(),
-					&transferKeeper,
+					nil,
 				)
 				s.network.App.SetErc20Keeper(erc20Keeper)
 
