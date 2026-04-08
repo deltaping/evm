@@ -14,6 +14,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - name: Get Diff
         uses: technote-space/get-diff-action@v6.1.2
         with:

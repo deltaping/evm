@@ -26,6 +26,7 @@ jobs:
             go.sum
             *.toml
       - name: "Dependency Review"
+        if: github.event_name == 'pull_request' || github.event_name == 'pull_request_target' || github.event_name == 'merge_group'
         uses: actions/dependency-review-action@v4
       - name: "Get govulncheck"
         run: go install golang.org/x/vuln/cmd/govulncheck@latest

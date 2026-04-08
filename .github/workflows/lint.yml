@@ -25,6 +25,8 @@ jobs:
           check-latest: true
 
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Cache Go modules
         uses: actions/cache@v4
@@ -61,6 +63,8 @@ jobs:
       # Standard checkout for all cases
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       # Only run if markdown or configs changed
       - uses: technote-space/get-diff-action@v6.1.2
