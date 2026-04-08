@@ -8,7 +8,6 @@ const (
 const (
 	StakingPrecompileAddress      = "0x0000000000000000000000000000000000000800"
 	DistributionPrecompileAddress = "0x0000000000000000000000000000000000000801"
-	ICS20PrecompileAddress        = "0x0000000000000000000000000000000000000802"
 	VestingPrecompileAddress      = "0x0000000000000000000000000000000000000803"
 	BankPrecompileAddress         = "0x0000000000000000000000000000000000000804"
 	GovPrecompileAddress          = "0x0000000000000000000000000000000000000805"
@@ -24,7 +23,6 @@ var AvailableStaticPrecompiles = []string{
 	Bech32PrecompileAddress,
 	StakingPrecompileAddress,
 	DistributionPrecompileAddress,
-	ICS20PrecompileAddress,
 	VestingPrecompileAddress,
 	BankPrecompileAddress,
 	GovPrecompileAddress,

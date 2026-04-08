@@ -10,14 +10,13 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// RegisterERC20Extension creates and adds an ERC20 precompile interface for an IBC Coin.
+// RegisterERC20Extension creates and adds an ERC20 precompile interface for a coin.
 //
-// It derives the ERC-20 address from the token denomination and registers the
-// EVM extension as an active dynamic precompile.
+// It registers the EVM extension as an active dynamic precompile.
 //
 // CONTRACT: This must ONLY be called if there is no existing token pair for the given denom.
-func (k Keeper) RegisterERC20Extension(ctx sdk.Context, denom string) (*types.TokenPair, error) {
-	pair, err := k.CreateNewTokenPair(ctx, denom)
+func (k Keeper) RegisterERC20Extension(ctx sdk.Context, contractAddr common.Address, denom string) (*types.TokenPair, error) {
+	pair, err := k.CreateNewTokenPair(ctx, contractAddr, denom)
 	if err != nil {
 		return nil, err
 	}

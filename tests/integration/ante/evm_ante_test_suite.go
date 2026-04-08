@@ -18,9 +18,6 @@ import (
 	"github.com/cosmos/evm/testutil/integration/evm/network"
 	utiltx "github.com/cosmos/evm/testutil/tx"
 	evmtypes "github.com/cosmos/evm/x/vm/types"
-	ibctypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
-	ibcclienttypes "github.com/cosmos/ibc-go/v8/modules/core/02-client/types"
-
 	sdkmath "cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
 	evtypes "cosmossdk.io/x/evidence/types"
@@ -307,19 +304,15 @@ func (s *EvmAnteTestSuite) CreateTestEIP712ZeroValueNumber(from sdk.AccAddress, 
 }
 
 func (s *EvmAnteTestSuite) CreateTestEIP712MsgTransfer(from sdk.AccAddress, priv cryptotypes.PrivKey, chainID string, evmChainID, gas uint64, gasAmount sdk.Coins) (client.TxBuilder, error) {
-	msgTransfer := s.createMsgTransfer(from, "With Memo")
-	return s.CreateTestEIP712SingleMessageTxBuilder(priv, chainID, evmChainID, gas, gasAmount, msgTransfer)
+	recipient := sdk.AccAddress(common.Address{}.Bytes())
+	msgSend := banktypes.NewMsgSend(from, recipient, sdk.NewCoins(sdk.NewCoin(s.GetNetwork().GetBaseDenom(), sdkmath.NewInt(100000))))
+	return s.CreateTestEIP712SingleMessageTxBuilder(priv, chainID, evmChainID, gas, gasAmount, msgSend)
 }
 
 func (s *EvmAnteTestSuite) CreateTestEIP712MsgTransferWithoutMemo(from sdk.AccAddress, priv cryptotypes.PrivKey, chainID string, evmChainID, gas uint64, gasAmount sdk.Coins) (client.TxBuilder, error) {
-	msgTransfer := s.createMsgTransfer(from, "")
-	return s.CreateTestEIP712SingleMessageTxBuilder(priv, chainID, evmChainID, gas, gasAmount, msgTransfer)
-}
-
-func (s *EvmAnteTestSuite) createMsgTransfer(from sdk.AccAddress, memo string) *ibctypes.MsgTransfer {
 	recipient := sdk.AccAddress(common.Address{}.Bytes())
-	msgTransfer := ibctypes.NewMsgTransfer("transfer", "channel-25", sdk.NewCoin(s.GetNetwork().GetBaseDenom(), sdkmath.NewInt(100000)), from.String(), recipient.String(), ibcclienttypes.NewHeight(1000, 1000), 1000, memo)
-	return msgTransfer
+	msgSend := banktypes.NewMsgSend(from, recipient, sdk.NewCoins(sdk.NewCoin(s.GetNetwork().GetBaseDenom(), sdkmath.NewInt(100000))))
+	return s.CreateTestEIP712SingleMessageTxBuilder(priv, chainID, evmChainID, gas, gasAmount, msgSend)
 }
 
 func (s *EvmAnteTestSuite) CreateTestEIP712MultipleSignerMsgs(from sdk.AccAddress, priv cryptotypes.PrivKey, chainID string, evmChainID, gas uint64, gasAmount sdk.Coins) (client.TxBuilder, error) {

@@ -7,7 +7,6 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/core/vm"
 
-	ibcutils "github.com/cosmos/evm/ibc"
 	cmn "github.com/cosmos/evm/precompiles/common"
 	erc20 "github.com/cosmos/evm/precompiles/erc20"
 	erc20types "github.com/cosmos/evm/x/erc20/types"
@@ -55,9 +54,8 @@ func NewPrecompile(
 	tokenPair erc20types.TokenPair,
 	bankKeeper cmn.BankKeeper,
 	erc20Keeper Erc20Keeper,
-	transferKeeper ibcutils.TransferKeeper,
 ) *Precompile {
-	erc20Precompile := erc20.NewPrecompile(tokenPair, bankKeeper, erc20Keeper, transferKeeper)
+	erc20Precompile := erc20.NewPrecompile(tokenPair, bankKeeper, erc20Keeper)
 
 	// use the IWERC20 ABI
 	erc20Precompile.ABI = ABI

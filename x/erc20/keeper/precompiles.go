@@ -61,18 +61,11 @@ func (k Keeper) InstantiateERC20Precompile(ctx sdk.Context, contractAddr common.
 		return nil, fmt.Errorf("token pair not found: %s", address)
 	}
 
-	if k.transferKeeper == nil {
-		if hasWrappedMethods {
-			return werc20.NewPrecompile(pair, k.bankKeeper, k, nil), nil
-		}
-		return erc20.NewPrecompile(pair, k.bankKeeper, k, nil), nil
-	}
-
 	if hasWrappedMethods {
-		return werc20.NewPrecompile(pair, k.bankKeeper, k, *k.transferKeeper), nil
+		return werc20.NewPrecompile(pair, k.bankKeeper, k), nil
 	}
 
-	return erc20.NewPrecompile(pair, k.bankKeeper, k, *k.transferKeeper), nil
+	return erc20.NewPrecompile(pair, k.bankKeeper, k), nil
 }
 
 // RegisterCodeHash checks if a new precompile already exists and registers the code hash it is not

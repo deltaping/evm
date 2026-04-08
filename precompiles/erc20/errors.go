@@ -6,7 +6,6 @@ import (
 
 	"github.com/ethereum/go-ethereum/core/vm"
 
-	"github.com/cosmos/evm/ibc"
 	cmn "github.com/cosmos/evm/precompiles/common"
 )
 
@@ -49,9 +48,7 @@ func ConvertErrToERC20Error(err error) error {
 		return ErrDecreasedAllowanceBelowZero
 	case strings.Contains(err.Error(), cmn.ErrIntegerOverflow):
 		return vm.ErrExecutionReverted
-	case errors.Is(err, ibc.ErrNoIBCVoucherDenom) ||
-		errors.Is(err, ibc.ErrDenomNotFound) ||
-		strings.Contains(err.Error(), "invalid base denomination") ||
+	case strings.Contains(err.Error(), "invalid base denomination") ||
 		strings.Contains(err.Error(), "display denomination not found") ||
 		strings.Contains(err.Error(), "invalid decimals"):
 		// NOTE: These are the cases when trying to query metadata of a contract, which has no metadata available.

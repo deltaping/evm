@@ -3,13 +3,10 @@ package erc20
 import (
 	"fmt"
 	"math"
-	"strings"
 
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/vm"
-
-	"github.com/cosmos/evm/ibc"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -36,8 +33,7 @@ const (
 )
 
 // Name returns the name of the token. If the token metadata is registered in the
-// bank module, it returns its name. Otherwise, it returns the base denomination of
-// the token capitalized (e.g. uatom -> Atom).
+// bank module, it returns its name. Otherwise, it returns execution reverted.
 func (p Precompile) Name(
 	ctx sdk.Context,
 	_ *vm.Contract,
@@ -46,22 +42,15 @@ func (p Precompile) Name(
 	_ []interface{},
 ) ([]byte, error) {
 	metadata, found := p.BankKeeper.GetDenomMetaData(ctx, p.tokenPair.Denom)
-	if found {
-		return method.Outputs.Pack(metadata.Name)
+	if !found {
+		return nil, ConvertErrToERC20Error(fmt.Errorf("display denomination not found for denom: %q", p.tokenPair.Denom))
 	}
 
-	baseDenom, err := p.getBaseDenomFromIBCVoucher(ctx, p.tokenPair.Denom)
-	if err != nil {
-		return nil, ConvertErrToERC20Error(err)
-	}
-
-	name := strings.ToUpper(string(baseDenom[1])) + baseDenom[2:]
-	return method.Outputs.Pack(name)
+	return method.Outputs.Pack(metadata.Name)
 }
 
 // Symbol returns the symbol of the token. If the token metadata is registered in the
-// bank module, it returns its symbol. Otherwise, it returns the base denomination of
-// the token in uppercase (e.g. uatom -> ATOM).
+// bank module, it returns its symbol. Otherwise, it returns execution reverted.
 func (p Precompile) Symbol(
 	ctx sdk.Context,
 	_ *vm.Contract,
@@ -70,22 +59,15 @@ func (p Precompile) Symbol(
 	_ []interface{},
 ) ([]byte, error) {
 	metadata, found := p.BankKeeper.GetDenomMetaData(ctx, p.tokenPair.Denom)
-	if found {
-		return method.Outputs.Pack(metadata.Symbol)
+	if !found {
+		return nil, ConvertErrToERC20Error(fmt.Errorf("display denomination not found for denom: %q", p.tokenPair.Denom))
 	}
 
-	baseDenom, err := p.getBaseDenomFromIBCVoucher(ctx, p.tokenPair.Denom)
-	if err != nil {
-		return nil, ConvertErrToERC20Error(err)
-	}
-
-	symbol := strings.ToUpper(baseDenom[1:])
-	return method.Outputs.Pack(symbol)
+	return method.Outputs.Pack(metadata.Symbol)
 }
 
 // Decimals returns the decimals places of the token. If the token metadata is registered in the
-// bank module, it returns the display denomination exponent. Otherwise, it infers the decimal
-// value from the first character of the base denomination (e.g. uatom -> 6).
+// bank module, it returns the display denomination exponent. Otherwise, it returns execution reverted.
 func (p Precompile) Decimals(
 	ctx sdk.Context,
 	_ *vm.Contract,
@@ -95,17 +77,10 @@ func (p Precompile) Decimals(
 ) ([]byte, error) {
 	metadata, found := p.BankKeeper.GetDenomMetaData(ctx, p.tokenPair.Denom)
 	if !found {
-		denom, err := ibc.GetDenom(p.transferKeeper, ctx, p.tokenPair.Denom)
-		if err != nil {
-			return nil, ConvertErrToERC20Error(err)
-		}
-
-		// we assume the decimal from the first character of the denomination
-		decimals, err := ibc.DeriveDecimalsFromDenom(denom.BaseDenom)
-		if err != nil {
-			return nil, ConvertErrToERC20Error(err)
-		}
-		return method.Outputs.Pack(decimals)
+		return nil, ConvertErrToERC20Error(fmt.Errorf(
+			"display denomination not found for denom: %q",
+			p.tokenPair.Denom,
+		))
 	}
 
 	var (
@@ -113,14 +88,7 @@ func (p Precompile) Decimals(
 		displayFound bool
 	)
 	for i := len(metadata.DenomUnits) - 1; i >= 0; i-- {
-		var match bool
-		if strings.HasPrefix(metadata.Base, "ibc/") {
-			displays := strings.Split(metadata.Display, "/")
-			match = metadata.DenomUnits[i].Denom == displays[len(displays)-1]
-		} else {
-			match = metadata.DenomUnits[i].Denom == metadata.Display
-		}
-		if match {
+		if metadata.DenomUnits[i].Denom == metadata.Display {
 			decimals = metadata.DenomUnits[i].Exponent
 			displayFound = true
 			break
@@ -200,20 +168,3 @@ func (p Precompile) Allowance(
 	return method.Outputs.Pack(allowance)
 }
 
-// getBaseDenomFromIBCVoucher returns the base denomination from the given IBC voucher denomination.
-func (p Precompile) getBaseDenomFromIBCVoucher(ctx sdk.Context, voucherDenom string) (string, error) {
-	// Infer the denomination name from the coin denomination base voucherDenom
-	denom, err := ibc.GetDenom(p.transferKeeper, ctx, voucherDenom)
-	if err != nil {
-		// FIXME: return 'not supported' (same error as when you call the method on an ERC20.sol)
-		return "", err
-	}
-
-	// safety check
-	if len(denom.BaseDenom) < 3 {
-		// FIXME: return not supported (same error as when you call the method on an ERC20.sol)
-		return "", fmt.Errorf("invalid base denomination; should be at least length 3; got: %q", denom.BaseDenom)
-	}
-
-	return denom.BaseDenom, nil
-}

@@ -9,7 +9,6 @@ import (
 
 	"github.com/cosmos/evm/precompiles/erc20"
 	"github.com/cosmos/evm/testutil"
-	"github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
 
 	sdkmath "cosmossdk.io/math"
 
@@ -21,15 +20,6 @@ import (
 
 // Define useful variables for tests here.
 var (
-	// tooShort is a denomination with a name that will raise the "denom too short" error
-	tooShort = types.ParseDenomTrace(types.PortID + "/channel-0/" + "ab")
-	// validDenom is a denomination with a valid IBC voucher name
-	validDenom = types.ParseDenomTrace(types.PortID + "/channel-0/" + "uosmo")
-	// validAttoDenom is a denomination with a valid IBC voucher name and 18 decimals
-	validAttoDenom = types.ParseDenomTrace(types.PortID + "/channel-0/" + "aatom")
-	// validDenomNoMicroAtto is a denomination with a valid IBC voucher name but no micro or atto prefix
-	validDenomNoMicroAtto = types.ParseDenomTrace(types.PortID + "/channel-0/" + "matom")
-
 	// --------------------
 	// Variables for coin with valid metadata
 	//
@@ -118,62 +108,21 @@ func (s *PrecompileTestSuite) TestNameSymbol() {
 		expSymbol   string
 	}{
 		{
-			name:        "fail - invalid denom trace",
-			denom:       tooShort.IBCDenom()[:len(tooShort.IBCDenom())-1],
-			errContains: "odd length hex string",
-		},
-		{
-			name:        "fail - denom not found",
-			denom:       types.ParseDenomTrace(types.PortID + "/channel-0/" + "notfound").IBCDenom(),
+			name:        "fail - denom without metadata",
+			denom:       "noMetadata",
 			errContains: vm.ErrExecutionReverted.Error(),
-		},
-		{
-			name:  "fail - invalid denom (too short < 3 chars)",
-			denom: tooShort.IBCDenom(),
-			malleate: func(_ sdk.Context, _ bankkeeper.Keeper) {
-				// SetDenomTrace removed: transfer keeper no longer available
-			},
-			errContains: vm.ErrExecutionReverted.Error(),
-		},
-		{
-			name:        "fail - denom without metadata and not an IBC voucher",
-			denom:       "noIBCvoucher",
-			errContains: vm.ErrExecutionReverted.Error(),
-		},
-		{
-			name:  "pass - valid ibc denom without metadata and neither atto nor micro prefix",
-			denom: validDenomNoMicroAtto.IBCDenom(),
-			malleate: func(_ sdk.Context, _ bankkeeper.Keeper) {
-				// SetDenomTrace removed: transfer keeper no longer available
-			},
-			expPass:   true,
-			expName:   "Atom",
-			expSymbol: "ATOM",
 		},
 		{
 			name:  "pass - valid denom with metadata",
 			denom: validMetadataDenom,
 			malleate: func(ctx sdk.Context, keeper bankkeeper.Keeper) {
-				// NOTE: we mint some coins to the inflation module address to be able to set denom metadata
 				err := keeper.MintCoins(ctx, minttypes.ModuleName, sdk.Coins{sdk.NewInt64Coin(validMetadata.Base, 1)})
 				s.Require().NoError(err)
-
-				// NOTE: we set the denom metadata for the coin
 				keeper.SetDenomMetaData(ctx, validMetadata)
 			},
 			expPass:   true,
 			expName:   "Atom",
 			expSymbol: "ATOM",
-		},
-		{
-			name:  "pass - valid ibc denom without metadata",
-			denom: validDenom.IBCDenom(),
-			malleate: func(_ sdk.Context, _ bankkeeper.Keeper) {
-				// SetDenomTrace removed: transfer keeper no longer available
-			},
-			expPass:   true,
-			expName:   "Osmo",
-			expSymbol: "OSMO",
 		},
 	}
 
@@ -229,136 +178,70 @@ func (s *PrecompileTestSuite) TestDecimals() {
 		expDecimals uint8
 	}{
 		{
-			name:        "fail - invalid denom trace",
-			denom:       tooShort.IBCDenom()[:len(tooShort.IBCDenom())-1],
-			errContains: "odd length hex string",
-		},
-		{
-			name:        "fail - denom not found",
-			denom:       types.ParseDenomTrace(types.PortID + "/channel-0/" + "notfound").IBCDenom(),
+			name:        "fail - denom without metadata",
+			denom:       "noMetadata",
 			errContains: vm.ErrExecutionReverted.Error(),
-		},
-		{
-			name:        "fail - denom without metadata and not an IBC voucher",
-			denom:       "noIBCvoucher",
-			errContains: vm.ErrExecutionReverted.Error(),
-		},
-		{
-			name:  "fail - valid ibc denom without metadata and neither atto nor micro prefix",
-			denom: validDenomNoMicroAtto.IBCDenom(),
-			malleate: func(_ sdk.Context, _ bankkeeper.Keeper) {
-				// SetDenomTrace removed: transfer keeper no longer available
-			},
-			errContains: vm.ErrExecutionReverted.Error(),
-		},
-		{
-			name:  "pass - invalid denom (too short < 3 chars)",
-			denom: tooShort.IBCDenom(),
-			malleate: func(_ sdk.Context, _ bankkeeper.Keeper) {
-				// SetDenomTrace removed: transfer keeper no longer available
-			},
-			expPass:     true, // TODO: do we want to check in decimals query for the above error?
-			expDecimals: 18,   // expect 18 decimals here because of "a" prefix
 		},
 		{
 			name:  "pass - valid denom with metadata",
 			denom: validMetadataDenom,
 			malleate: func(ctx sdk.Context, keeper bankkeeper.Keeper) {
-				// NOTE: we mint some coins to the inflation module address to be able to set denom metadata
 				err := keeper.MintCoins(ctx, minttypes.ModuleName, sdk.Coins{sdk.NewInt64Coin(validMetadata.Base, 1)})
 				s.Require().NoError(err)
-
-				// NOTE: we set the denom metadata for the coin
 				keeper.SetDenomMetaData(ctx, validMetadata)
 			},
 			expPass:     true,
 			expDecimals: 6,
 		},
 		{
-			name:  "pass - valid ibc denom without metadata",
-			denom: validDenom.IBCDenom(),
-			malleate: func(_ sdk.Context, _ bankkeeper.Keeper) {
-				// SetDenomTrace removed: transfer keeper no longer available
-			},
-			expPass:     true,
-			expDecimals: 6,
-		},
-		{
-			name:  "pass - valid ibc denom without metadata and 18 decimals",
-			denom: validAttoDenom.IBCDenom(),
-			malleate: func(_ sdk.Context, _ bankkeeper.Keeper) {
-				// SetDenomTrace removed: transfer keeper no longer available
-			},
-			expPass:     true,
-			expDecimals: 18,
-		},
-		{
-			name:  "pass - valid denom with metadata but decimals overflow",
+			name:  "fail - valid denom with metadata but decimals overflow",
 			denom: validMetadataDenom,
 			malleate: func(ctx sdk.Context, keeper bankkeeper.Keeper) {
-				// NOTE: we mint some coins to the inflation module address to be able to set denom metadata
 				err := keeper.MintCoins(ctx, minttypes.ModuleName, sdk.Coins{sdk.NewInt64Coin(validMetadata.Base, 1)})
 				s.Require().NoError(err)
-
-				// NOTE: we set the denom metadata for the coin
 				keeper.SetDenomMetaData(s.network.GetContext(), overflowMetadata)
 			},
 			errContains: vm.ErrExecutionReverted.Error(),
 		},
 		{
-			name:  "pass - valid ibc denom with metadata but no display denom",
+			name:  "fail - denom with metadata but no display denom",
 			denom: validMetadataDenom,
 			malleate: func(ctx sdk.Context, keeper bankkeeper.Keeper) {
-				// NOTE: we mint some coins to the inflation module address to be able to set denom metadata
 				err := keeper.MintCoins(ctx, minttypes.ModuleName, sdk.Coins{sdk.NewInt64Coin(validMetadata.Base, 1)})
 				s.Require().NoError(err)
-
-				// NOTE: we set the denom metadata for the coin
 				keeper.SetDenomMetaData(ctx, noDisplayMetadata)
 			},
 			errContains: vm.ErrExecutionReverted.Error(),
 		},
 		{
-			name:  "pass - valid IBC denom with metadata using display path",
-			denom: "ibc/B89BE1E96B3DBC0ABB05F858F08561BA12B9C5E420CA2F5E83C475CCB47A834E",
+			name:  "pass - denom with metadata using display denom",
+			denom: "uom",
 			malleate: func(ctx sdk.Context, keeper bankkeeper.Keeper) {
 				keeper.SetDenomMetaData(ctx, banktypes.Metadata{
-					Base: "ibc/B89BE1E96B3DBC0ABB05F858F08561BA12B9C5E420CA2F5E83C475CCB47A834E",
+					Base: "uom",
 					DenomUnits: []*banktypes.DenomUnit{
-						{
-							Denom:    "ibc/B89BE1E96B3DBC0ABB05F858F08561BA12B9C5E420CA2F5E83C475CCB47A834E",
-							Exponent: 0,
-						},
-						{
-							Denom:    "uom",
-							Exponent: 6,
-						},
+						{Denom: "uom", Exponent: 0},
+						{Denom: "om", Exponent: 6},
 					},
-					Display: "transfer/channel-0/uom",
-					Name:    "transfer/channel-0/uom IBC token",
-					Symbol:  "UOM",
+					Display: "om",
+					Name:    "OM Token",
+					Symbol:  "OM",
 				})
 			},
 			expPass:     true,
 			expDecimals: 6,
 		},
 		{
-			name:  "fail - IBC denom with metadata but no matching display unit",
-			denom: "ibc/C1D2E3F4567890123456789012345678901234567890123456789012345678901234",
+			name:  "fail - denom with metadata but no matching display unit",
+			denom: "umismatch",
 			malleate: func(ctx sdk.Context, keeper bankkeeper.Keeper) {
 				keeper.SetDenomMetaData(ctx, banktypes.Metadata{
-					Base: "ibc/C1D2E3F4567890123456789012345678901234567890123456789012345678901234",
+					Base: "umismatch",
 					DenomUnits: []*banktypes.DenomUnit{
-						{
-							Denom:    "ibc/C1D2E3F4567890123456789012345678901234567890123456789012345678901234",
-							Exponent: 0,
-						},
-						{
-							Denom:    "nomatch",
-							Exponent: 6,
-						},
+						{Denom: "umismatch", Exponent: 0},
+						{Denom: "nomatch", Exponent: 6},
 					},
-					Display: "transfer/channel-0/lastpart",
+					Display: "mismatch",
 					Name:    "Mismatched Token",
 					Symbol:  "MISMATCH",
 				})

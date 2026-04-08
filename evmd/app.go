@@ -443,7 +443,6 @@ func NewExampleApp(
 		app.PreciseBankKeeper,
 		app.EVMKeeper,
 		app.StakingKeeper,
-		nil, // no IBC transfer keeper
 	)
 
 	/****  Module Options ****/

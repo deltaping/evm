@@ -196,7 +196,6 @@ func (s *KeeperTestSuite) TestConvertNativeERC20ToEVMERC20() {
 					s.network.App.GetKey("erc20"), s.network.App.AppCodec(),
 					authtypes.NewModuleAddress(govtypes.ModuleName), s.network.App.GetAccountKeeper(),
 					s.network.App.GetBankKeeper(), mockEVMKeeper, s.network.App.GetStakingKeeperSDK(),
-					nil,
 				)
 				s.network.App.SetErc20Keeper(erc20Keeper)
 
@@ -225,7 +224,6 @@ func (s *KeeperTestSuite) TestConvertNativeERC20ToEVMERC20() {
 					s.network.App.GetKey("erc20"), s.network.App.AppCodec(),
 					authtypes.NewModuleAddress(govtypes.ModuleName), s.network.App.GetAccountKeeper(),
 					s.network.App.GetBankKeeper(), mockEVMKeeper, s.network.App.GetStakingKeeperSDK(),
-					nil,
 				)
 				s.network.App.SetErc20Keeper(erc20Keeper)
 
@@ -256,7 +254,6 @@ func (s *KeeperTestSuite) TestConvertNativeERC20ToEVMERC20() {
 					s.network.App.GetKey("erc20"), s.network.App.AppCodec(),
 					authtypes.NewModuleAddress(govtypes.ModuleName), s.network.App.GetAccountKeeper(),
 					s.network.App.GetBankKeeper(), mockEVMKeeper, s.network.App.GetStakingKeeperSDK(),
-					nil,
 				)
 				s.network.App.SetErc20Keeper(erc20Keeper)
 
@@ -285,7 +282,6 @@ func (s *KeeperTestSuite) TestConvertNativeERC20ToEVMERC20() {
 					s.network.App.GetKey("erc20"), s.network.App.AppCodec(),
 					authtypes.NewModuleAddress(govtypes.ModuleName), s.network.App.GetAccountKeeper(),
 					s.network.App.GetBankKeeper(), mockEVMKeeper, s.network.App.GetStakingKeeperSDK(),
-					nil,
 				)
 				s.network.App.SetErc20Keeper(erc20Keeper)
 
@@ -315,7 +311,6 @@ func (s *KeeperTestSuite) TestConvertNativeERC20ToEVMERC20() {
 					s.network.App.GetKey("erc20"), s.network.App.AppCodec(),
 					authtypes.NewModuleAddress(govtypes.ModuleName), s.network.App.GetAccountKeeper(),
 					mockBankKeeper, s.network.App.GetEVMKeeper(), s.network.App.GetStakingKeeperSDK(),
-					nil,
 				)
 				s.network.App.SetErc20Keeper(erc20Keeper)
 
@@ -341,7 +336,6 @@ func (s *KeeperTestSuite) TestConvertNativeERC20ToEVMERC20() {
 					s.network.App.GetKey("erc20"), s.network.App.AppCodec(),
 					authtypes.NewModuleAddress(govtypes.ModuleName), s.network.App.GetAccountKeeper(),
 					mockBankKeeper, s.network.App.GetEVMKeeper(), s.network.App.GetStakingKeeperSDK(),
-					nil,
 				)
 				s.network.App.SetErc20Keeper(erc20Keeper)
 

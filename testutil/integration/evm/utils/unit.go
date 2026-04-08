@@ -7,6 +7,9 @@ package utils
 import (
 	"fmt"
 
+	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/crypto"
+
 	"github.com/cosmos/evm/testutil/integration/evm/network"
 	erc20types "github.com/cosmos/evm/x/erc20/types"
 
@@ -57,7 +60,9 @@ func RegisterEvmosERC20Coins(
 		return erc20types.TokenPair{}, fmt.Errorf("expected evmos denom metadata")
 	}
 
-	_, err = network.App.GetErc20Keeper().RegisterERC20Extension(network.GetContext(), cosmosEVMMetadata.Base)
+	// Derive a deterministic contract address from the denom
+	contractAddr := common.BytesToAddress(crypto.Keccak256([]byte(cosmosEVMMetadata.Base))[:20])
+	_, err = network.App.GetErc20Keeper().RegisterERC20Extension(network.GetContext(), contractAddr, cosmosEVMMetadata.Base)
 	if err != nil {
 		return erc20types.TokenPair{}, err
 	}

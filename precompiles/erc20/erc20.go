@@ -7,7 +7,6 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/core/vm"
 
-	ibcutils "github.com/cosmos/evm/ibc"
 	cmn "github.com/cosmos/evm/precompiles/common"
 	erc20types "github.com/cosmos/evm/x/erc20/types"
 
@@ -61,9 +60,8 @@ type Precompile struct {
 	cmn.Precompile
 
 	abi.ABI
-	tokenPair      erc20types.TokenPair
-	transferKeeper ibcutils.TransferKeeper
-	erc20Keeper    Erc20Keeper
+	tokenPair   erc20types.TokenPair
+	erc20Keeper Erc20Keeper
 	// BankKeeper is a public field so that the werc20 precompile can use it.
 	BankKeeper cmn.BankKeeper
 }
@@ -80,7 +78,6 @@ func NewPrecompile(
 	tokenPair erc20types.TokenPair,
 	bankKeeper cmn.BankKeeper,
 	erc20Keeper Erc20Keeper,
-	transferKeeper ibcutils.TransferKeeper,
 ) *Precompile {
 	return &Precompile{
 		Precompile: cmn.Precompile{
@@ -89,11 +86,10 @@ func NewPrecompile(
 			ContractAddress:       tokenPair.GetERC20Contract(),
 			BalanceHandlerFactory: cmn.NewBalanceHandlerFactory(bankKeeper),
 		},
-		ABI:            ABI,
-		tokenPair:      tokenPair,
-		BankKeeper:     bankKeeper,
-		erc20Keeper:    erc20Keeper,
-		transferKeeper: transferKeeper,
+		ABI:         ABI,
+		tokenPair:   tokenPair,
+		BankKeeper:  bankKeeper,
+		erc20Keeper: erc20Keeper,
 	}
 }
 

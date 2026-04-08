@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	"github.com/cosmos/evm/x/erc20/types"
-	transferkeeper "github.com/cosmos/ibc-go/v8/modules/apps/transfer/keeper"
 
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/log"
@@ -22,11 +21,10 @@ type Keeper struct {
 	authority sdk.AccAddress
 	addrCodec address.Codec
 
-	accountKeeper  types.AccountKeeper
-	bankKeeper     types.BankKeeper
-	evmKeeper      types.EVMKeeper
-	stakingKeeper  types.StakingKeeper
-	transferKeeper *transferkeeper.Keeper
+	accountKeeper types.AccountKeeper
+	bankKeeper    types.BankKeeper
+	evmKeeper     types.EVMKeeper
+	stakingKeeper types.StakingKeeper
 }
 
 // NewKeeper creates new instances of the erc20 Keeper
@@ -38,7 +36,6 @@ func NewKeeper(
 	bk types.BankKeeper,
 	evmKeeper types.EVMKeeper,
 	sk types.StakingKeeper,
-	transferKeeper *transferkeeper.Keeper,
 ) Keeper {
 	// ensure gov module account is set and is not nil
 	if err := sdk.VerifyAddressFormat(authority); err != nil {
@@ -46,15 +43,14 @@ func NewKeeper(
 	}
 
 	return Keeper{
-		authority:      authority,
-		storeKey:       storeKey,
-		cdc:            cdc,
-		accountKeeper:  ak,
-		bankKeeper:     bk,
-		evmKeeper:      evmKeeper,
-		stakingKeeper:  sk,
-		transferKeeper: transferKeeper,
-		addrCodec:      ak.AddressCodec(),
+		authority:     authority,
+		storeKey:      storeKey,
+		cdc:           cdc,
+		accountKeeper: ak,
+		bankKeeper:    bk,
+		evmKeeper:     evmKeeper,
+		stakingKeeper: sk,
+		addrCodec:     ak.AddressCodec(),
 	}
 }
 

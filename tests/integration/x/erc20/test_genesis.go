@@ -7,7 +7,6 @@ import (
 	utiltx "github.com/cosmos/evm/testutil/tx"
 	"github.com/cosmos/evm/x/erc20"
 	"github.com/cosmos/evm/x/erc20/types"
-	transfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
 
 	"cosmossdk.io/math"
 )
@@ -20,9 +19,11 @@ type GenesisTestSuite struct {
 	genesis types.GenesisState
 }
 
-const osmoERC20ContractAddr = "0x5D87876250185593977a6F94aF98877a5E7eD60E"
-
-var osmoDenom = transfertypes.ParseDenomTrace(transfertypes.PortID + "/channel-0/uosmo")
+const (
+	osmoERC20ContractAddr = "0x5D87876250185593977a6F94aF98877a5E7eD60E"
+	// Pre-computed IBC denom for transfer/channel-0/uosmo
+	osmoIBCDenom = "ibc/ED07A3391A112B175915CD8FAF43A2DA8E4790EDE12566649D0C2F97716B8518"
+)
 
 func NewGenesisTestSuite(create network.CreateEvmApp, options ...network.ConfigOption) *GenesisTestSuite {
 	return &GenesisTestSuite{
@@ -56,7 +57,7 @@ func (s *GenesisTestSuite) TestERC20InitGenesis() {
 				[]types.TokenPair{
 					{
 						Erc20Address:  osmoERC20ContractAddr,
-						Denom:         osmoDenom.IBCDenom(),
+						Denom:         osmoIBCDenom,
 						Enabled:       true,
 						ContractOwner: types.OWNER_MODULE,
 					},
@@ -71,7 +72,7 @@ func (s *GenesisTestSuite) TestERC20InitGenesis() {
 				[]types.TokenPair{
 					{
 						Erc20Address:  osmoERC20ContractAddr,
-						Denom:         osmoDenom.IBCDenom(),
+						Denom:         osmoIBCDenom,
 						Enabled:       true,
 						ContractOwner: types.OWNER_MODULE,
 					},
@@ -93,7 +94,7 @@ func (s *GenesisTestSuite) TestERC20InitGenesis() {
 				[]types.TokenPair{
 					{
 						Erc20Address:  osmoERC20ContractAddr,
-						Denom:         osmoDenom.IBCDenom(),
+						Denom:         osmoIBCDenom,
 						Enabled:       false,
 						ContractOwner: types.OWNER_MODULE,
 					},
@@ -159,7 +160,7 @@ func (s *GenesisTestSuite) TestErc20ExportGenesis() {
 				[]types.TokenPair{
 					{
 						Erc20Address:  osmoERC20ContractAddr,
-						Denom:         osmoDenom.IBCDenom(),
+						Denom:         osmoIBCDenom,
 						Enabled:       true,
 						ContractOwner: types.OWNER_MODULE,
 					},
@@ -174,7 +175,7 @@ func (s *GenesisTestSuite) TestErc20ExportGenesis() {
 				[]types.TokenPair{
 					{
 						Erc20Address:  osmoERC20ContractAddr,
-						Denom:         osmoDenom.IBCDenom(),
+						Denom:         osmoIBCDenom,
 						Enabled:       true,
 						ContractOwner: types.OWNER_MODULE,
 					},

@@ -15,7 +15,6 @@ import (
 	feemarkettypes "github.com/cosmos/evm/x/feemarket/types"
 	precisebanktypes "github.com/cosmos/evm/x/precisebank/types"
 	evmtypes "github.com/cosmos/evm/x/vm/types"
-	ibctransfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
 
 	serverconfig "github.com/cosmos/cosmos-sdk/server/config"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -58,7 +57,6 @@ func MustGetDefaultNodeHome() string {
 var maccPerms = map[string][]string{
 	authtypes.FeeCollectorName:     nil,
 	distrtypes.ModuleName:          nil,
-	ibctransfertypes.ModuleName:    {authtypes.Minter, authtypes.Burner},
 	minttypes.ModuleName:           {authtypes.Minter},
 	stakingtypes.BondedPoolName:    {authtypes.Burner, authtypes.Staking},
 	stakingtypes.NotBondedPoolName: {authtypes.Burner, authtypes.Staking},

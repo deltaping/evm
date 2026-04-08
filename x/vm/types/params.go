@@ -10,10 +10,6 @@ import (
 	"github.com/ethereum/go-ethereum/params"
 
 	"github.com/cosmos/evm/utils"
-	channeltypes "github.com/cosmos/ibc-go/v8/modules/core/04-channel/types"
-	host "github.com/cosmos/ibc-go/v8/modules/core/24-host"
-
-	errorsmod "cosmossdk.io/errors"
 )
 
 var (
@@ -77,7 +73,7 @@ func DefaultParams() Params {
 	}
 }
 
-// validateChannels checks if channels ids are valid
+// validateChannels checks if channel ids are valid
 func validateChannels(i interface{}) error {
 	channels, ok := i.([]string)
 	if !ok {
@@ -85,10 +81,8 @@ func validateChannels(i interface{}) error {
 	}
 
 	for _, channel := range channels {
-		if err := host.ChannelIdentifierValidator(channel); err != nil {
-			return errorsmod.Wrap(
-				channeltypes.ErrInvalidChannelIdentifier, err.Error(),
-			)
+		if len(channel) == 0 {
+			return fmt.Errorf("invalid channel identifier: cannot be empty")
 		}
 	}
 
