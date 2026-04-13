@@ -31,6 +31,7 @@ func NewTxCmd() *cobra.Command {
 		NewConvertCoinCmd(),
 		NewConvertERC20Cmd(),
 		NewMsgRegisterERC20Cmd(),
+		NewMsgRegisterERC20WithDenomCmd(),
 	)
 	return txCmd
 }
@@ -119,6 +120,39 @@ func NewConvertCoinCmd() *cobra.Command {
 
 			if err := msg.ValidateBasic(); err != nil {
 				return err
+			}
+
+			return tx.GenerateOrBroadcastTxCLI(cliCtx, cmd.Flags(), msg)
+		},
+	}
+
+	flags.AddTxFlagsToCmd(cmd)
+	return cmd
+}
+
+func NewMsgRegisterERC20WithDenomCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "register-erc20-with-denom [CONTRACT_ADDRESS] [DENOM]",
+		Short: "Bind an ERC20 contract to a specific Cosmos bank denom (governance only)",
+		Long:  "Submit a transaction to bind an ERC20 contract address to an explicit Cosmos bank denom (e.g. erc20/usdc). This bypasses the auto-generated denom from register-erc20. Must be executed by the governance authority.",
+		Args:  cobra.ExactArgs(2),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			cliCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			contract := args[0]
+			if err := utils.ValidateAddress(contract); err != nil {
+				return fmt.Errorf("invalid ERC20 contract address %w", err)
+			}
+
+			denom := args[1]
+
+			msg := &types.MsgRegisterERC20WithDenom{
+				Authority:    cliCtx.GetFromAddress().String(),
+				Erc20Address: contract,
+				Denom:        denom,
 			}
 
 			return tx.GenerateOrBroadcastTxCLI(cliCtx, cmd.Flags(), msg)

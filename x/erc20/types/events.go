@@ -11,7 +11,8 @@ const (
 	EventTypeConvertERC20           = "convert_erc20"
 	EventTypeRegisterERC20          = "register_erc20"
 	EventTypeToggleTokenConversion  = "toggle_token_conversion" // #nosec
-	EventTypeRegisterERC20Extension = "register_erc20_extension"
+	EventTypeRegisterERC20Extension  = "register_erc20_extension"
+	EventTypeRegisterERC20WithDenom = "register_erc20_with_denom"
 
 	EventTypeFailedConvertERC20 = "failed_convert_erc20"
 

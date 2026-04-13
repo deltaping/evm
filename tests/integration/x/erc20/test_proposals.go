@@ -223,6 +223,39 @@ func (s *KeeperTestSuite) TestRegisterERC20() {
 	}
 }
 
+func (s *KeeperTestSuite) TestRegisterERC20WithDenom() {
+	const customDenom = "erc20/usdc"
+
+	s.SetupTest()
+
+	contractAddr, err := s.factory.DeployContract(
+		s.keyring.GetPrivKey(0),
+		evmtypes.EvmTxArgs{},
+		testutiltypes.ContractDeploymentData{
+			Contract:        contracts.ERC20MinterBurnerDecimalsContract,
+			ConstructorArgs: []interface{}{erc20Name, erc20Symbol, cosmosDecimals},
+		},
+	)
+	s.Require().NoError(err, "failed to deploy contract")
+	s.Require().NoError(s.network.NextBlock(), "failed to advance block")
+
+	ctx := s.network.GetContext()
+
+	res, err := s.network.App.GetErc20Keeper().RegisterERC20WithDenom(ctx, &types.MsgRegisterERC20WithDenom{
+		Authority:    authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+		Erc20Address: contractAddr.Hex(),
+		Denom:        customDenom,
+	})
+	s.Require().NoError(err)
+	s.Require().NotNil(res)
+
+	id := s.network.App.GetErc20Keeper().GetTokenPairID(ctx, customDenom)
+	pair, found := s.network.App.GetErc20Keeper().GetTokenPair(ctx, id)
+	s.Require().True(found)
+	s.Require().Equal(customDenom, pair.Denom)
+	s.Require().Equal(contractAddr.Hex(), pair.Erc20Address)
+}
+
 func (s *KeeperTestSuite) TestToggleConverision() {
 	var (
 		ctx          sdk.Context

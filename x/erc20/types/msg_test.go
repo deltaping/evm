@@ -275,3 +275,80 @@ func (suite *MsgsTestSuite) TestMsgUpdateValidateBasic() {
 		})
 	}
 }
+
+func (suite *MsgsTestSuite) TestMsgRegisterERC20WithDenomValidateBasic() {
+	govAddr := authtypes.NewModuleAddress(govtypes.ModuleName).String()
+	validContract := utiltx.GenerateAddress().String()
+
+	testCases := []struct {
+		name    string
+		msg     *types.MsgRegisterERC20WithDenom
+		expPass bool
+	}{
+		{
+			"fail - invalid authority address",
+			&types.MsgRegisterERC20WithDenom{
+				Authority:    "invalid",
+				Erc20Address: validContract,
+				Denom:        "erc20/usdc",
+			},
+			false,
+		},
+		{
+			"fail - invalid ERC20 contract address",
+			&types.MsgRegisterERC20WithDenom{
+				Authority:    govAddr,
+				Erc20Address: "not_hex",
+				Denom:        "erc20/usdc",
+			},
+			false,
+		},
+		{
+			"fail - empty denom",
+			&types.MsgRegisterERC20WithDenom{
+				Authority:    govAddr,
+				Erc20Address: validContract,
+				Denom:        "",
+			},
+			false,
+		},
+		{
+			"fail - invalid denom characters",
+			&types.MsgRegisterERC20WithDenom{
+				Authority:    govAddr,
+				Erc20Address: validContract,
+				Denom:        "!invalid!",
+			},
+			false,
+		},
+		{
+			"pass - valid msg with erc20/usdc denom",
+			&types.MsgRegisterERC20WithDenom{
+				Authority:    govAddr,
+				Erc20Address: validContract,
+				Denom:        "erc20/usdc",
+			},
+			true,
+		},
+		{
+			"pass - valid msg with custom denom",
+			&types.MsgRegisterERC20WithDenom{
+				Authority:    govAddr,
+				Erc20Address: validContract,
+				Denom:        "ibc/ABC123",
+			},
+			true,
+		},
+	}
+
+	for _, tc := range testCases {
+		suite.Run(tc.name, func() {
+			err := tc.msg.ValidateBasic()
+			if tc.expPass {
+				suite.NoError(err)
+			} else {
+				suite.Error(err)
+			}
+		})
+	}
+}

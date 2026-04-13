@@ -28,7 +28,8 @@ const (
 	convertCoinName  = "cosmos/evm/MsgConvertCoin" // keep it for backwards compatibility when querying txs
 	updateParams     = "cosmos/evm/erc20/MsgUpdateParams"
 	registerERC20    = "cosmos/evm/erc20/MsgRegisterERC20"
-	toggleConversion = "cosmos/evm/erc20/MsgToggleConversion"
+	toggleConversion         = "cosmos/evm/erc20/MsgToggleConversion"
+	registerERC20WithDenom   = "cosmos/evm/erc20/MsgRegisterERC20WithDenom"
 )
 
 // NOTE: This is required for the GetSignBytes function
@@ -46,6 +47,7 @@ func RegisterInterfaces(registry codectypes.InterfaceRegistry) {
 		&MsgUpdateParams{},
 		&MsgRegisterERC20{},
 		&MsgToggleConversion{},
+		&MsgRegisterERC20WithDenom{},
 	)
 	registry.RegisterImplementations(
 		(*govv1beta1.Content)(nil),
@@ -66,4 +68,5 @@ func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 	cdc.RegisterConcrete(&MsgConvertCoin{}, convertCoinName, nil)
 	cdc.RegisterConcrete(&MsgRegisterERC20{}, registerERC20, nil)
 	cdc.RegisterConcrete(&MsgToggleConversion{}, toggleConversion, nil)
+	cdc.RegisterConcrete(&MsgRegisterERC20WithDenom{}, registerERC20WithDenom, nil)
 }

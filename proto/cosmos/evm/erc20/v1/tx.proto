@@ -38,6 +38,13 @@ service Msg {
   // module account
   rpc ToggleConversion(MsgToggleConversion)
       returns (MsgToggleConversionResponse);
+
+  // RegisterERC20WithDenom defines a governance operation for binding an
+  // ERC20 contract to a specific Cosmos bank denom (e.g. "erc20/usdc").
+  // Unlike RegisterERC20 which auto-generates the denom, this allows
+  // mapping to an existing denom. The authority is the x/gov module account.
+  rpc RegisterERC20WithDenom(MsgRegisterERC20WithDenom)
+      returns (MsgRegisterERC20WithDenomResponse);
 }
 
 // MsgConvertERC20 defines a Msg to convert a ERC20 token to a native Cosmos
@@ -134,3 +141,23 @@ message MsgToggleConversion {
 // MsgToggleConversionResponse defines the response structure for executing a
 // ToggleConversion message.
 message MsgToggleConversionResponse {}
+
+// MsgRegisterERC20WithDenom is the Msg/RegisterERC20WithDenom request type
+// for binding an ERC20 contract to a specific Cosmos bank denom via governance.
+message MsgRegisterERC20WithDenom {
+  option (amino.name) = "cosmos/evm/erc20/MsgRegisterERC20WithDenom";
+  option (cosmos.msg.v1.signer) = "authority";
+
+  // authority is the address of the governance account.
+  string authority = 1 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
+
+  // erc20_address is the hex address of the ERC20 contract.
+  string erc20_address = 2;
+
+  // denom is the Cosmos bank denom to bind to (e.g. "erc20/usdc").
+  string denom = 3;
+}
+
+// MsgRegisterERC20WithDenomResponse defines the response structure for
+// executing a RegisterERC20WithDenom message.
+message MsgRegisterERC20WithDenomResponse {}

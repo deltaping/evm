@@ -19,11 +19,13 @@ var (
 	_ sdk.Msg              = &MsgUpdateParams{}
 	_ sdk.Msg              = &MsgRegisterERC20{}
 	_ sdk.Msg              = &MsgToggleConversion{}
+	_ sdk.Msg              = &MsgRegisterERC20WithDenom{}
 	_ sdk.HasValidateBasic = &MsgConvertERC20{}
 	_ sdk.HasValidateBasic = &MsgConvertCoin{}
 	_ sdk.HasValidateBasic = &MsgUpdateParams{}
 	_ sdk.HasValidateBasic = &MsgRegisterERC20{}
 	_ sdk.HasValidateBasic = &MsgToggleConversion{}
+	_ sdk.HasValidateBasic = &MsgRegisterERC20WithDenom{}
 )
 
 const (
@@ -108,6 +110,20 @@ func (m *MsgToggleConversion) ValidateBasic() error {
 		return errorsmod.Wrap(err, "Invalid authority address")
 	}
 
+	return nil
+}
+
+// ValidateBasic does a sanity check of the provided data
+func (m *MsgRegisterERC20WithDenom) ValidateBasic() error {
+	if _, err := sdk.AccAddressFromBech32(m.Authority); err != nil {
+		return errorsmod.Wrap(err, "invalid authority address")
+	}
+	if !common.IsHexAddress(m.Erc20Address) {
+		return errortypes.ErrInvalidAddress.Wrapf("invalid ERC20 contract address: %s", m.Erc20Address)
+	}
+	if err := sdk.ValidateDenom(m.Denom); err != nil {
+		return errorsmod.Wrapf(err, "invalid denom: %s", m.Denom)
+	}
 	return nil
 }
 

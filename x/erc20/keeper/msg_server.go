@@ -15,6 +15,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	errortypes "github.com/cosmos/cosmos-sdk/types/errors"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
@@ -240,6 +241,85 @@ func (k *Keeper) ToggleConversion(goCtx context.Context, req *types.MsgToggleCon
 	)
 
 	return &types.MsgToggleConversionResponse{}, nil
+}
+
+// RegisterERC20WithDenom binds an ERC20 contract to a specific Cosmos bank
+// denom (e.g. "erc20/usdc") instead of auto-generating the denom. This is a
+// governance-gated operation: only the x/gov authority can execute it.
+func (k *Keeper) RegisterERC20WithDenom(
+	goCtx context.Context,
+	req *types.MsgRegisterERC20WithDenom,
+) (*types.MsgRegisterERC20WithDenomResponse, error) {
+	if err := k.validateAuthority(req.Authority); err != nil {
+		return nil, err
+	}
+
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	if !k.IsERC20Enabled(ctx) {
+		return nil, types.ErrERC20Disabled.Wrap("registration is currently disabled by governance")
+	}
+
+	contractAddr := common.HexToAddress(req.Erc20Address)
+
+	acc := k.evmKeeper.GetAccountWithoutBalance(ctx, contractAddr)
+	if acc == nil || !acc.HasCodeHash() {
+		return nil, errortypes.ErrInvalidRequest.Wrapf("no deployed contract at %s", req.Erc20Address)
+	}
+
+	if _, found := k.bankKeeper.GetDenomMetaData(ctx, req.Denom); !found {
+		erc20Data, err := k.QueryERC20(ctx, contractAddr)
+		if err != nil {
+			return nil, sdkerrors.Wrap(err, "failed to query ERC20 metadata from contract")
+		}
+
+		metadata := banktypes.Metadata{
+			Description: types.CreateDenomDescription(contractAddr.String()),
+			Base:        req.Denom,
+			DenomUnits: []*banktypes.DenomUnit{
+				{
+					Denom:    req.Denom,
+					Exponent: 0,
+				},
+			},
+			Name:    req.Denom,
+			Symbol:  erc20Data.Symbol,
+			Display: req.Denom,
+		}
+
+		if erc20Data.Decimals > 0 {
+			nameSanitized := types.SanitizeERC20Name(erc20Data.Name)
+			metadata.DenomUnits = append(
+				metadata.DenomUnits,
+				&banktypes.DenomUnit{
+					Denom:    nameSanitized,
+					Exponent: uint32(erc20Data.Decimals), //#nosec G115
+				},
+			)
+			metadata.Display = nameSanitized
+		}
+
+		if err := metadata.Validate(); err != nil {
+			return nil, sdkerrors.Wrapf(err, "ERC20 token data is invalid for contract %s", req.Erc20Address)
+		}
+
+		k.bankKeeper.SetDenomMetaData(ctx, metadata)
+	}
+
+	pair := types.NewTokenPair(contractAddr, req.Denom, types.OWNER_EXTERNAL)
+	if err := k.SetToken(ctx, pair); err != nil {
+		return nil, err
+	}
+
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			types.EventTypeRegisterERC20WithDenom,
+			sdk.NewAttribute(types.AttributeKeyCosmosCoin, pair.Denom),
+			sdk.NewAttribute(types.AttributeKeyERC20Token, pair.Erc20Address),
+		),
+	)
+
+	return &types.MsgRegisterERC20WithDenomResponse{}, nil
 }
 
 // validateAuthority is a helper function to validate that the provided authority
