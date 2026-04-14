@@ -8,6 +8,7 @@ import (
 	"github.com/ethereum/go-ethereum/core/vm"
 
 	bankprecompile "github.com/cosmos/evm/precompiles/bank"
+	bankerc20precompile "github.com/cosmos/evm/precompiles/bankerc20"
 	"github.com/cosmos/evm/precompiles/bech32"
 	cmn "github.com/cosmos/evm/precompiles/common"
 	distprecompile "github.com/cosmos/evm/precompiles/distribution"
@@ -102,6 +103,16 @@ func (s StaticPrecompiles) WithBankPrecompile(
 ) StaticPrecompiles {
 	bankPrecompile := bankprecompile.NewPrecompile(bankKeeper, erc20Keeper)
 	s[bankPrecompile.Address()] = bankPrecompile
+	return s
+}
+
+func (s StaticPrecompiles) WithBankERC20Precompile(
+	bankKeeper bankerc20precompile.BankERC20Keeper,
+	erc20Keeper *erc20Keeper.Keeper,
+	evmKeeper bankerc20precompile.EVMKeeper,
+) StaticPrecompiles {
+	precompile := bankerc20precompile.NewPrecompile(bankKeeper, erc20Keeper, evmKeeper)
+	s[precompile.Address()] = precompile
 	return s
 }
 

@@ -15,7 +15,6 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	errortypes "github.com/cosmos/cosmos-sdk/types/errors"
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
@@ -246,6 +245,8 @@ func (k *Keeper) ToggleConversion(goCtx context.Context, req *types.MsgToggleCon
 // RegisterERC20WithDenom binds an ERC20 contract to a specific Cosmos bank
 // denom (e.g. "erc20/usdc") instead of auto-generating the denom. This is a
 // governance-gated operation: only the x/gov authority can execute it.
+// The denom's bank metadata (name, symbol, decimals, denom_units) must already
+// exist before calling this method — typically configured in genesis.
 func (k *Keeper) RegisterERC20WithDenom(
 	goCtx context.Context,
 	req *types.MsgRegisterERC20WithDenom,
@@ -268,42 +269,10 @@ func (k *Keeper) RegisterERC20WithDenom(
 	}
 
 	if _, found := k.bankKeeper.GetDenomMetaData(ctx, req.Denom); !found {
-		erc20Data, err := k.QueryERC20(ctx, contractAddr)
-		if err != nil {
-			return nil, sdkerrors.Wrap(err, "failed to query ERC20 metadata from contract")
-		}
-
-		metadata := banktypes.Metadata{
-			Description: types.CreateDenomDescription(contractAddr.String()),
-			Base:        req.Denom,
-			DenomUnits: []*banktypes.DenomUnit{
-				{
-					Denom:    req.Denom,
-					Exponent: 0,
-				},
-			},
-			Name:    req.Denom,
-			Symbol:  erc20Data.Symbol,
-			Display: req.Denom,
-		}
-
-		if erc20Data.Decimals > 0 {
-			nameSanitized := types.SanitizeERC20Name(erc20Data.Name)
-			metadata.DenomUnits = append(
-				metadata.DenomUnits,
-				&banktypes.DenomUnit{
-					Denom:    nameSanitized,
-					Exponent: uint32(erc20Data.Decimals), //#nosec G115
-				},
-			)
-			metadata.Display = nameSanitized
-		}
-
-		if err := metadata.Validate(); err != nil {
-			return nil, sdkerrors.Wrapf(err, "ERC20 token data is invalid for contract %s", req.Erc20Address)
-		}
-
-		k.bankKeeper.SetDenomMetaData(ctx, metadata)
+		return nil, errortypes.ErrInvalidRequest.Wrapf(
+			"bank metadata for denom %s not found; it must be set via genesis or x/bank before registering a TokenPair",
+			req.Denom,
+		)
 	}
 
 	pair := types.NewTokenPair(contractAddr, req.Denom, types.OWNER_EXTERNAL)
